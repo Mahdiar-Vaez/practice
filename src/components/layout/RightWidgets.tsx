@@ -16,28 +16,28 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import { useColorMode } from '@/theme/ThemeRegistry';
 
 const TRENDS = [
-  { category: 'Technology · Trending', topic: '#Nextjs16', posts: '48.2K posts' },
-  { category: 'Design · Trending', topic: 'UI/UX Pro Max', posts: '24.9K posts' },
-  { category: 'Artificial Intelligence · Trending', topic: 'Gemini 2.0 Flash', posts: '112.5K posts' },
-  { category: 'Web Development · Trending', topic: 'Material UI v6', posts: '18.7K posts' },
-  { category: 'Sports · Trending', topic: 'Champions League', posts: '89.4K posts' },
+  { category: 'فناوری · ترند روز', topic: '#نکست_جی_اس_۱۶', posts: '۴۸.۲ هزار پست' },
+  { category: 'طراحی · داغ‌ترین‌ها', topic: 'رابط کاربری و تجربه کاربری', posts: '۲۴.۹ هزار پست' },
+  { category: 'هوش مصنوعی · فناوری', topic: 'مدل‌های زبانی بزرگ (LLM)', posts: '۱۱۲.۵ هزار پست' },
+  { category: 'توسعه وب · برنامه‌نویسی', topic: 'متریال یو‌آی نسخه ۶', posts: '۱۸.۷ هزار پست' },
+  { category: 'ورزش · پرطرفدار', topic: 'لیگ قهرمانان اروپا', posts: '۸۹.۴ هزار پست' },
 ];
 
 const FOLLOW_SUGGESTIONS = [
   {
-    name: 'Material UI',
+    name: 'متریال یو‌آی',
     handle: '@MUI_core',
     avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80',
     verified: true,
   },
   {
-    name: 'Next.js',
+    name: 'تیم نکست‌جی‌اس',
     handle: '@nextjs',
     avatar: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=100&auto=format&fit=crop&q=80',
     verified: true,
   },
   {
-    name: 'Vercel',
+    name: 'ورسل',
     handle: '@vercel',
     avatar: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=100&auto=format&fit=crop&q=80',
     verified: true,
@@ -64,7 +64,7 @@ export default function RightWidgets() {
         '&::-webkit-scrollbar': { display: 'none' },
       }}
     >
-      {/* Sticky Search Header: Exactly 53px high in a row with center feed header, covering full width */}
+      {/* Sticky Search Header */}
       <Box
         sx={{
           position: 'sticky',
@@ -101,11 +101,11 @@ export default function RightWidgets() {
             sx={{
               color: isFocused ? 'primary.main' : 'text.secondary',
               fontSize: 20,
-              mr: 1.5,
+              ml: 1.5,
             }}
           />
           <InputBase
-            placeholder="Search"
+            placeholder="جستجو در توییتر..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onFocus={() => setIsFocused(true)}
@@ -131,21 +131,21 @@ export default function RightWidgets() {
             p: 2,
             border: '1px solid',
             borderColor: 'divider',
-            borderRadius: '16px', // Clean Twitter 16px radius
+            borderRadius: '16px',
             backgroundColor: 'background.paper',
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.5 }}>
-            Subscribe to Premium
+            خرید اشتراک ویژه (Premium)
           </Typography>
           <Typography
             variant="body2"
-            sx={{ color: 'text.primary', mb: 1.5, lineHeight: 1.35 }}
+            sx={{ color: 'text.primary', mb: 1.5, lineHeight: 1.45 }}
           >
-            Subscribe to unlock new features and if eligible, receive a share of ads revenue.
+            با خرید اشتراک، به قابلیت‌های انحصاری، تیک آبی و سهم از درآمد تبلیغات دسترسی پیدا کنید.
           </Typography>
-          <Button variant="contained" color="primary" sx={{ px: 2.5, py: 0.8 }}>
-            Subscribe
+          <Button variant="contained" color="primary" sx={{ px: 2.5, py: 0.8, borderRadius: 9999, fontWeight: 700 }}>
+            خرید اشتراک
           </Button>
         </Box>
 
@@ -154,13 +154,13 @@ export default function RightWidgets() {
           sx={{
             border: '1px solid',
             borderColor: 'divider',
-            borderRadius: '16px', // Clean Twitter 16px radius
+            borderRadius: '16px',
             backgroundColor: 'background.paper',
             overflow: 'hidden',
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 800, px: 2, pt: 1.5, pb: 1 }}>
-            What&apos;s happening
+            ترندها و رویدادهای روز
           </Typography>
 
           <Stack>
@@ -215,8 +215,8 @@ export default function RightWidgets() {
               },
             }}
           >
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              Show more
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              نمایش بیشتر
             </Typography>
           </Box>
         </Box>
@@ -226,13 +226,13 @@ export default function RightWidgets() {
           sx={{
             border: '1px solid',
             borderColor: 'divider',
-            borderRadius: '16px', // Clean Twitter 16px radius
+            borderRadius: '16px',
             backgroundColor: 'background.paper',
             overflow: 'hidden',
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 800, px: 2, pt: 1.5, pb: 1 }}>
-            Who to follow
+            پیشنهاد برای دنبال کردن
           </Typography>
 
           <Stack>
@@ -283,9 +283,10 @@ export default function RightWidgets() {
                     py: 0.6,
                     fontSize: '0.875rem',
                     fontWeight: 700,
+                    borderRadius: 9999,
                   }}
                 >
-                  Follow
+                  دنبال کردن
                 </Button>
               </Box>
             ))}
@@ -302,8 +303,8 @@ export default function RightWidgets() {
               },
             }}
           >
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              Show more
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              نمایش بیشتر
             </Typography>
           </Box>
         </Box>
@@ -316,17 +317,17 @@ export default function RightWidgets() {
               color: 'text.secondary',
               display: 'flex',
               flexWrap: 'wrap',
-              gap: '6px 10px',
+              gap: '6px 12px',
               fontSize: '0.8125rem',
-              lineHeight: 1.4,
+              lineHeight: 1.5,
             }}
           >
-            <Box component="span" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>Terms of Service</Box>
-            <Box component="span" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>Privacy Policy</Box>
-            <Box component="span" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>Cookie Policy</Box>
-            <Box component="span" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>Accessibility</Box>
-            <Box component="span" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>Ads info</Box>
-            <Box component="span">© 2026 X Corp.</Box>
+            <Box component="span" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>شرایط خدمات</Box>
+            <Box component="span" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>حریم خصوصی</Box>
+            <Box component="span" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>خط‌مشی کوکی‌ها</Box>
+            <Box component="span" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>دسترسی‌پذیری</Box>
+            <Box component="span" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>اطلاعات تبلیغات</Box>
+            <Box component="span">© ۲۰۲۶ شرکت ایکس</Box>
           </Typography>
         </Box>
       </Stack>

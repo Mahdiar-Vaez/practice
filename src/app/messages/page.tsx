@@ -21,19 +21,19 @@ export default function MessagesPage() {
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: 800 }}>
-          Messages
+          پیام‌ها
         </Typography>
       </Box>
 
       <Box sx={{ p: 4, textAlign: 'center', mt: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
-          Welcome to your inbox!
+        <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5 }}>
+          به صندوق پیام‌های خود خوش آمدید!
         </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 380, mx: 'auto', mb: 3 }}>
-          Drop a line, share posts and more with private conversations between you and others on X.
+        <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 400, mx: 'auto', mb: 3, lineHeight: 1.6 }}>
+          ارسال پیام خصوصی، اشتراک‌گذاری پست‌ها و گفتگوی مستقیم با دوستان و سایر کاربران در توییتر / X.
         </Typography>
-        <Button variant="contained" color="primary" sx={{ px: 3, py: 1.2, fontWeight: 700 }}>
-          Write a message
+        <Button variant="contained" color="primary" sx={{ px: 3, py: 1.2, fontWeight: 700, borderRadius: 9999 }}>
+          ارسال پیام جدید
         </Button>
       </Box>
     </AppLayout>

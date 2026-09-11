@@ -22,22 +22,22 @@ export default function NotificationsPage() {
       >
         <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
           <Typography variant="h6" sx={{ fontWeight: 800 }}>
-            Notifications
+            اعلان‌ها
           </Typography>
         </Box>
         <Tabs value={tab} onChange={(_e, val) => setTab(val)} variant="fullWidth">
-          <Tab label="All" />
-          <Tab label="Verified" />
-          <Tab label="Mentions" />
+          <Tab label="همه" />
+          <Tab label="تأییدشده" />
+          <Tab label="اشاره‌ها (منشن)" />
         </Tabs>
       </Box>
 
-      <Box sx={{ p: 4, textAlign: 'center' }}>
+      <Box sx={{ p: 4, textAlign: 'center', mt: 4 }}>
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-          Nothing to see here — yet
+          هنوز اعلانی دریافت نکرده‌اید!
         </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 360, mx: 'auto' }}>
-          From likes to reposts and a whole lot more, this is where all the action about your posts and account will appear.
+        <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 380, mx: 'auto', lineHeight: 1.6 }}>
+          تمام تعاملات کاربران مانند لایک‌ها، پاسخ‌ها، اشاره‌ها و بازنشر پست‌های شما در این بخش نمایش داده خواهند شد.
         </Typography>
       </Box>
     </AppLayout>

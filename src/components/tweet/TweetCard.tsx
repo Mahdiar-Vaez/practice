@@ -155,7 +155,7 @@ export default function TweetCard({ tweet }: TweetCardProps) {
                 backgroundColor: 'rgba(29, 155, 240, 0.1)',
               },
             }}
-            aria-label="More options"
+            aria-label="گزینه‌های بیشتر"
           >
             <MoreHorizIcon fontSize="small" />
           </IconButton>
@@ -334,7 +334,7 @@ export default function TweetCard({ tweet }: TweetCardProps) {
                   backgroundColor: 'rgba(29, 155, 240, 0.1)',
                 },
               }}
-              aria-label="Bookmark"
+              aria-label="نشانک‌گذاری"
             >
               {bookmarked ? (
                 <BookmarkIcon sx={{ fontSize: 18, color: 'primary.main' }} />
@@ -353,7 +353,7 @@ export default function TweetCard({ tweet }: TweetCardProps) {
                   backgroundColor: 'rgba(29, 155, 240, 0.1)',
                 },
               }}
-              aria-label="Share"
+              aria-label="اشتراک‌گذاری"
             >
               <IosShareIcon sx={{ fontSize: 18 }} />
             </IconButton>

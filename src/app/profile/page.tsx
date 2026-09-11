@@ -11,13 +11,20 @@ import {
   Stack,
   IconButton,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import AppLayout from '@/components/layout/AppLayout';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function ProfilePage() {
   const [tab, setTab] = React.useState(0);
+  const { user } = useAuth();
+
+  const displayName = user?.name || 'کاربر دمو';
+  const displayHandle = user ? `@${user.username}` : '@demo';
+  const displayAvatar = user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80';
+  const displayBio = user?.bio || 'توسعه‌دهنده نرم‌افزار، علاقه‌مند به نکست‌جی‌اس ۱۶، متریال یو‌آی و معماری‌های مدرن وب.';
 
   return (
     <AppLayout>
@@ -35,21 +42,21 @@ export default function ProfilePage() {
           py: 0.5,
           display: 'flex',
           alignItems: 'center',
-          gap: 3,
+          gap: 2,
         }}
       >
         <IconButton sx={{ color: 'text.primary' }} href="/">
-          <ArrowBackIcon />
+          <ArrowForwardIcon />
         </IconButton>
         <Box>
           <Stack direction="row" spacing={0.5} alignItems="center">
             <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              Alex Dev
+              {displayName}
             </Typography>
             <VerifiedIcon sx={{ fontSize: 18, color: 'primary.main' }} />
           </Stack>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            142 Posts
+            ۱۴۲ پست
           </Typography>
         </Box>
       </Box>
@@ -75,44 +82,44 @@ export default function ProfilePage() {
           }}
         >
           <Avatar
-            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80"
-            alt="Alex Dev"
+            src={displayAvatar}
+            alt={displayName}
             sx={{
               width: 134,
               height: 134,
               border: '4px solid #000000',
             }}
           />
-          <Button variant="outlined" sx={{ fontWeight: 700, px: 2.5 }}>
-            Edit profile
+          <Button variant="outlined" sx={{ fontWeight: 700, px: 2.5, borderRadius: 9999 }}>
+            ویرایش پروفایل
           </Button>
         </Box>
 
         {/* Bio & Details */}
         <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          Alex Dev
+          {displayName}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5 }}>
-          @alex_builder
+          {displayHandle}
         </Typography>
 
-        <Typography variant="body1" sx={{ mb: 1.5 }}>
-          Building high-performance web applications with Next.js 16 & Material UI. Design systems and UI/UX engineering enthusiast.
+        <Typography variant="body1" sx={{ mb: 1.5, lineHeight: 1.6 }}>
+          {displayBio}
         </Typography>
 
         <Stack direction="row" spacing={2} sx={{ color: 'text.secondary', mb: 1.5 }}>
           <Stack direction="row" spacing={0.5} alignItems="center">
             <CalendarMonthOutlinedIcon sx={{ fontSize: 18 }} />
-            <Typography variant="body2">Joined March 2021</Typography>
+            <Typography variant="body2">عضویت از فروردین ۱۴۰۳</Typography>
           </Stack>
         </Stack>
 
         <Stack direction="row" spacing={2.5}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            <Box component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>540</Box> Following
+            <Box component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>۵۴۰</Box> دنبال‌شده
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            <Box component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>12.4K</Box> Followers
+            <Box component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>۱۲.۴K</Box> دنبال‌کننده
           </Typography>
         </Stack>
       </Box>
@@ -124,11 +131,11 @@ export default function ProfilePage() {
         variant="fullWidth"
         sx={{ borderBottom: '1px solid', borderColor: 'divider' }}
       >
-        <Tab label="Posts" />
-        <Tab label="Replies" />
-        <Tab label="Highlights" />
-        <Tab label="Media" />
-        <Tab label="Likes" />
+        <Tab label="پست‌ها" />
+        <Tab label="پاسخ‌ها" />
+        <Tab label="برگزیده‌ها" />
+        <Tab label="رسانه‌ها" />
+        <Tab label="پسندیده‌ها" />
       </Tabs>
     </AppLayout>
   );

@@ -18,6 +18,7 @@ import SentimentSatisfiedAltOutlinedIcon from '@mui/icons-material/SentimentSati
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import FmdGoodOutlinedIcon from '@mui/icons-material/FmdGoodOutlined';
 import PublicIcon from '@mui/icons-material/Public';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TweetComposerProps {
   onPost?: (content: string) => void;
@@ -26,6 +27,7 @@ interface TweetComposerProps {
 const MAX_CHARS = 280;
 
 export default function TweetComposer({ onPost }: TweetComposerProps) {
+  const { user } = useAuth();
   const [content, setContent] = React.useState('');
   const [isFocused, setIsFocused] = React.useState(false);
 
@@ -54,15 +56,15 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
       }}
     >
       <Avatar
-        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-        alt="User Avatar"
+        src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}
+        alt={user?.name || 'تصویر کاربر'}
         sx={{ width: 40, height: 40 }}
       />
 
       <Box sx={{ flex: 1 }}>
         {/* Text Input Area */}
         <InputBase
-          placeholder="What is happening?!"
+          placeholder="چه اتفاقی در حال رخ دادن است؟!"
           multiline
           minRows={2}
           value={content}
@@ -71,8 +73,8 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
           sx={{
             width: '100%',
             color: 'text.primary',
-            fontSize: '1.25rem',
-            lineHeight: 1.4,
+            fontSize: '1.15rem',
+            lineHeight: 1.5,
             pt: 0.5,
             pb: 1,
             '& input::placeholder': {
@@ -82,7 +84,7 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
           }}
         />
 
-        {/* Audience Pill (Visible when focused or typing) */}
+        {/* Audience Pill */}
         {(isFocused || content.length > 0) && (
           <Box
             sx={{
@@ -105,7 +107,7 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
           >
             <PublicIcon sx={{ fontSize: 16 }} />
             <Typography variant="caption" sx={{ fontWeight: 700, color: 'primary.main' }}>
-              Everyone can reply
+              همه می‌توانند پاسخ دهند
             </Typography>
           </Box>
         )}
@@ -123,23 +125,23 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
           }}
         >
           {/* Action Icons */}
-          <Stack direction="row" spacing={0.25} sx={{ color: 'primary.main', ml: -1 }}>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="Add Image">
+          <Stack direction="row" spacing={0.25} sx={{ color: 'primary.main' }}>
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن تصویر">
               <ImageOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="Add GIF">
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن گیف">
               <GifBoxOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="Add Poll">
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="ایجاد نظرسنجی">
               <BallotOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="Add Emoji">
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن ایموجی">
               <SentimentSatisfiedAltOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="Schedule">
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="زمان‌بندی ارسال">
               <CalendarTodayOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="Add Location">
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن موقعیت مکانی">
               <FmdGoodOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
           </Stack>
@@ -177,7 +179,7 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
                 opacity: canPost ? 1 : 0.5,
               }}
             >
-              Post
+              ارسال پست
             </Button>
           </Stack>
         </Box>

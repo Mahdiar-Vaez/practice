@@ -3,8 +3,11 @@
 import * as React from 'react';
 import { Box, Typography } from '@mui/material';
 import AppLayout from '@/components/layout/AppLayout';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function BookmarksPage() {
+  const { user } = useAuth();
+
   return (
     <AppLayout>
       <Box
@@ -21,19 +24,19 @@ export default function BookmarksPage() {
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: 800 }}>
-          Bookmarks
+          نشانک‌ها
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          @alex_builder
+          {user ? `@${user.username}` : '@demo'}
         </Typography>
       </Box>
 
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
-          Save posts for later
+      <Box sx={{ p: 4, textAlign: 'center', mt: 4 }}>
+        <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5 }}>
+          ذخیره پست‌ها برای بعد
         </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 360, mx: 'auto' }}>
-          Don&apos;t let the good ones fly away! Bookmark posts to easily find them again in the future.
+        <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 380, mx: 'auto', lineHeight: 1.6 }}>
+          پست‌های جالب و کاربردی را ذخیره کنید تا در آینده در هر زمان بتوانید مجدداً به آن‌ها دسترسی پیدا کنید.
         </Typography>
       </Box>
     </AppLayout>

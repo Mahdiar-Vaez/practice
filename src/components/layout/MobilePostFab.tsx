@@ -15,13 +15,13 @@ export default function MobilePostFab({ onClick }: MobilePostFabProps) {
         display: { xs: 'block', sm: 'none' },
         position: 'fixed',
         bottom: 'calc(68px + env(safe-area-inset-bottom, 0px))',
-        right: 16,
+        left: 16,
         zIndex: 1099,
       }}
     >
       <Fab
         color="primary"
-        aria-label="Create Post"
+        aria-label="ارسال پست جدید"
         onClick={onClick}
         sx={{
           width: 56,

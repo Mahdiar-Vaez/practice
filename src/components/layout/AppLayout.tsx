@@ -37,7 +37,8 @@ export default function AppLayout({ children, onFabClick }: AppLayoutProps) {
             width: '100%',
             maxWidth: { xs: '100%', sm: 600 },
             minHeight: '100vh',
-            borderRight: { xs: 'none', sm: '1px solid' },
+            borderInlineEnd: { xs: 'none', sm: '1px solid' },
+            borderInlineStart: { xs: 'none', lg: '1px solid' },
             borderColor: 'divider',
             position: 'relative',
             // Ensure content clearance for mobile fixed bottom bar

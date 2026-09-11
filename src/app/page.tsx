@@ -12,65 +12,67 @@ import AppLayout from '@/components/layout/AppLayout';
 import TweetComposer from '@/components/tweet/TweetComposer';
 import TweetCard, { TweetData } from '@/components/tweet/TweetCard';
 import { useColorMode } from '@/theme/ThemeRegistry';
+import { useAuth } from '@/hooks/useAuth';
 
 const INITIAL_TWEETS: TweetData[] = [
   {
     id: '1',
     author: {
-      name: 'Next.js',
+      name: 'نکست جی‌اس',
       handle: '@nextjs',
       avatar: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=100&auto=format&fit=crop&q=80',
       verified: true,
     },
-    time: '2h',
-    content: 'Next.js 16 is now live with lightning-fast Turbopack compilation, React 19 support, and enhanced server actions! 🚀\n\nTry it now: npx create-next-app@latest',
+    time: '۲ ساعت پیش',
+    content: 'نسخه ۱۶ نکست‌جی‌اس با کامپایل توربوپک فوق‌سریع، پشتیبانی رسمی از ری‌اکت ۱۹ و ارتقای چشمگیر سرور اکشن‌ها منتشر شد! 🚀\n\nبرای شروع دستور npx create-next-app@latest را اجرا کنید.',
     mediaUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
     stats: {
       replies: 342,
       reposts: 1204,
       likes: 5890,
-      views: '142K',
+      views: '۱۴۲K',
     },
   },
   {
     id: '2',
     author: {
-      name: 'Material UI',
+      name: 'متریال یو‌آی',
       handle: '@MUI_core',
       avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80',
       verified: true,
     },
-    time: '4h',
-    content: 'Material UI v6 paired with Next.js App Router and Dark Mode OLED palette gives your app incredible performance and native feel.\n\n#React #MUI #WebDev',
+    time: '۴ ساعت پیش',
+    content: 'ترکیب متریال یو‌آی نسخه ۶ با اپ‌روتر نکست‌جی‌اس و پشتیبانی کامل از حالت تاریک OLED و چیدمان راست‌چین (RTL)، تجربه‌ای کاملاً بومی و روان را برای کاربران فارسی‌زبان فراهم می‌کند.\n\n#ری‌اکت #توسعه_وب #طراحی_رابط_کاربری',
     stats: {
       replies: 89,
       reposts: 215,
       likes: 1430,
-      views: '45.8K',
+      views: '۴۵.۸K',
     },
   },
   {
     id: '3',
     author: {
-      name: 'Design Digest',
+      name: 'دیزاین دایجست',
       handle: '@designdigest',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
       verified: false,
     },
-    time: '6h',
-    content: 'The 3-column desktop layout with high information density, subtle borders, and spring physics micro-interactions remains the gold standard for social media dashboards.',
+    time: '۶ ساعت پیش',
+    content: 'طراحی ۳ ستونه مدرن با تراکم مناسب اطلاعات، مرزبندی‌های ظریف و انیمیشن‌های روان فیزیکی، همواره استاندارد طلایی داشبوردهای تعاملی و شبکه‌های اجتماعی است.',
     mediaUrl: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80',
     stats: {
       replies: 56,
       reposts: 132,
       likes: 890,
-      views: '28.1K',
+      views: '۲۸.۱K',
     },
   },
 ];
 
 export default function HomePage() {
   const { mode } = useColorMode();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = React.useState(0);
   const [tweets, setTweets] = React.useState<TweetData[]>(INITIAL_TWEETS);
 
@@ -82,18 +84,18 @@ export default function HomePage() {
     const newTweet: TweetData = {
       id: Date.now().toString(),
       author: {
-        name: 'Alex Dev',
-        handle: '@alex_builder',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+        name: user?.name || 'کاربر دمو',
+        handle: user ? `@${user.username}` : '@demo',
+        avatar: user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
         verified: true,
       },
-      time: 'Just now',
+      time: 'همین الان',
       content,
       stats: {
         replies: 0,
         reposts: 0,
         likes: 0,
-        views: '1',
+        views: '۱',
       },
     };
 
@@ -102,7 +104,7 @@ export default function HomePage() {
 
   return (
     <AppLayout>
-      {/* Sticky Header with "For you" / "Following" Tabs */}
+      {/* Sticky Header with "برای شما" / "دنبال‌شده‌ها" Tabs */}
       <Box
         sx={{
           position: 'sticky',
@@ -121,8 +123,8 @@ export default function HomePage() {
             variant="fullWidth"
             sx={{ flex: 1 }}
           >
-            <Tab label="For you" />
-            <Tab label="Following" />
+            <Tab label="برای شما" />
+            <Tab label="دنبال‌شده‌ها" />
           </Tabs>
 
           <IconButton
@@ -133,7 +135,7 @@ export default function HomePage() {
                 backgroundColor: 'action.hover',
               },
             }}
-            aria-label="Timeline Settings"
+            aria-label="تنظیمات تایم‌لاین"
           >
             <SettingsOutlinedIcon fontSize="small" />
           </IconButton>
@@ -144,7 +146,7 @@ export default function HomePage() {
       <TweetComposer onPost={handleNewTweet} />
 
       {/* Feed List */}
-      <Box component="section" aria-label="Timeline Feed">
+      <Box component="section" aria-label="تایم‌لاین پست‌ها">
         {tweets.map((tweet) => (
           <TweetCard key={tweet.id} tweet={tweet} />
         ))}

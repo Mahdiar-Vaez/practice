@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Box, Typography, Tabs, Tab, Stack } from '@mui/material';
+import { Box, Typography, Tabs, Tab } from '@mui/material';
 import AppLayout from '@/components/layout/AppLayout';
 
 export default function ExplorePage() {
@@ -26,20 +26,20 @@ export default function ExplorePage() {
           variant="scrollable"
           scrollButtons="auto"
         >
-          <Tab label="For you" />
-          <Tab label="Trending" />
-          <Tab label="News" />
-          <Tab label="Sports" />
-          <Tab label="Entertainment" />
+          <Tab label="برای شما" />
+          <Tab label="ترندهای داغ" />
+          <Tab label="اخبار" />
+          <Tab label="ورزش" />
+          <Tab label="سرگرمی" />
         </Tabs>
       </Box>
 
       <Box sx={{ p: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 800, mb: 2 }}>
-          Explore & Trending
+          کاوش و موضوعات داغ
         </Typography>
         <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          Real-time trends, topics, and discussions tailored for you.
+          آخرین اخبار، گفت‌وگوهای زنده و موضوعات پرطرفدار شخصی‌سازی‌شده برای شما.
         </Typography>
       </Box>
     </AppLayout>
