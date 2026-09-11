@@ -19,3 +19,39 @@ export interface LoginResponseData {
   token: string;
   user: User;
 }
+
+export interface Author {
+  name: string;
+  handle: string;
+  avatar: string;
+  verified?: boolean;
+}
+
+export interface TweetData {
+  id: string;
+  author: Author;
+  time: string;
+  content: string;
+  mediaUrl?: string;
+  likesCount: number;
+  commentsCount: number;
+  repostsCount?: number;
+  views?: string;
+  isLiked?: boolean;
+  stats?: {
+    replies: number;
+    reposts: number;
+    likes: number;
+    views: string;
+  };
+}
+
+export interface CommentData {
+  id: string;
+  tweetId: string;
+  author: Author;
+  content: string;
+  time: string;
+  createdAt: string;
+}
+
