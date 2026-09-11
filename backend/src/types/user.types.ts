@@ -19,3 +19,10 @@ export interface CreateUserDTO {
   bio?: string;
   avatar?: string;
 }
+
+export interface UpdateProfileDTO {
+  name?: string;
+  bio?: string;
+  avatar?: string;
+}
+

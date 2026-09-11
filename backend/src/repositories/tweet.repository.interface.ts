@@ -8,4 +8,9 @@ export interface ITweetRepository {
   isLiked(tweetId: string, userId: string): Promise<boolean>;
   getComments(tweetId: string): Promise<Comment[]>;
   addComment(tweetId: string, data: CreateCommentDTO): Promise<Comment>;
+  findByAuthorId(authorId: string): Promise<Tweet[]>;
+  findLikedByUser(userId: string): Promise<Tweet[]>;
+  findCommentsByAuthorId(authorId: string): Promise<Comment[]>;
+  deleteUserData(userId: string): Promise<void>;
 }
+

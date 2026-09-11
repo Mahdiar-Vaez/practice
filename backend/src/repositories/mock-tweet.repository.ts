@@ -145,6 +145,44 @@ export class MockTweetRepository implements ITweetRepository {
 
     return { ...newComment };
   }
+
+  async findByAuthorId(authorId: string): Promise<Tweet[]> {
+    return this.tweets
+      .filter((t) => t.authorId === authorId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async findLikedByUser(userId: string): Promise<Tweet[]> {
+    const likedTweetIds = new Set<string>();
+    for (const [tweetId, userSet] of this.likes.entries()) {
+      if (userSet.has(userId)) {
+        likedTweetIds.add(tweetId);
+      }
+    }
+    return this.tweets
+      .filter((t) => likedTweetIds.has(t.id))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async findCommentsByAuthorId(authorId: string): Promise<Comment[]> {
+    return this.comments
+      .filter((c) => c.authorId === authorId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async deleteUserData(userId: string): Promise<void> {
+    this.tweets = this.tweets.filter((t) => t.authorId !== userId);
+    this.comments = this.comments.filter((c) => c.authorId !== userId);
+    for (const [tweetId, userSet] of this.likes.entries()) {
+      if (userSet.has(userId)) {
+        userSet.delete(userId);
+        const tweet = this.tweets.find((t) => t.id === tweetId);
+        if (tweet && tweet.likesCount > 0) {
+          tweet.likesCount -= 1;
+        }
+      }
+    }
+  }
 }
 
 export const tweetRepository = new MockTweetRepository();
