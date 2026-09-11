@@ -12,6 +12,8 @@ import {
   Stack,
   useMediaQuery,
   Tooltip,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
@@ -34,25 +36,27 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import CreateIcon from '@mui/icons-material/Create';
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
+import LoginIcon from '@mui/icons-material/Login';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { useColorMode } from '@/theme/ThemeRegistry';
+import { useAuth } from '@/hooks/useAuth';
 
 const NAV_ITEMS = [
-  { label: 'Home', href: '/', icon: HomeOutlinedIcon, activeIcon: HomeIcon },
-  { label: 'Explore', href: '/explore', icon: SearchIcon, activeIcon: SearchIcon, isSearch: true },
-  { label: 'Notifications', href: '/notifications', icon: NotificationsOutlinedIcon, activeIcon: NotificationsIcon },
-  { label: 'Messages', href: '/messages', icon: MailOutlineIcon, activeIcon: MailIcon },
-  { label: 'Grok', href: '/grok', icon: AutoAwesomeOutlinedIcon, activeIcon: AutoAwesomeIcon },
-  { label: 'Bookmarks', href: '/bookmarks', icon: BookmarkBorderIcon, activeIcon: BookmarkIcon },
-  { label: 'Communities', href: '/communities', icon: PeopleOutlineIcon, activeIcon: PeopleIcon },
-  { label: 'Premium', href: '/premium', icon: VerifiedOutlinedIcon, activeIcon: VerifiedIcon },
-  { label: 'Profile', href: '/profile', icon: PersonOutlineIcon, activeIcon: PersonIcon },
-  { label: 'Sign in', href: '/login', icon: PersonOutlineIcon, activeIcon: PersonIcon },
+  { label: 'خانه', href: '/', icon: HomeOutlinedIcon, activeIcon: HomeIcon },
+  { label: 'کاوش', href: '/explore', icon: SearchIcon, activeIcon: SearchIcon, isSearch: true },
+  { label: 'اعلان‌ها', href: '/notifications', icon: NotificationsOutlinedIcon, activeIcon: NotificationsIcon },
+  { label: 'پیام‌ها', href: '/messages', icon: MailOutlineIcon, activeIcon: MailIcon },
+  { label: 'نشانک‌ها', href: '/bookmarks', icon: BookmarkBorderIcon, activeIcon: BookmarkIcon },
+  { label: 'پروفایل', href: '/profile', icon: PersonOutlineIcon, activeIcon: PersonIcon },
+  { label: 'ورود به حساب', href: '/login', icon: LoginIcon, activeIcon: LoginIcon, authOnly: 'guest' },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const isLarge = useMediaQuery('(min-width:1280px)');
   const { mode, toggleColorMode } = useColorMode();
+  const { user, isAuthenticated, logout } = useAuth();
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   return (
     <Box
@@ -66,7 +70,7 @@ export default function Sidebar() {
         flexDirection: 'column',
         justifyContent: 'space-between',
         padding: isLarge ? '12px 12px' : '12px 8px',
-        borderRight: '1px solid',
+        borderInlineEnd: '1px solid',
         borderColor: 'divider',
         userSelect: 'none',
         flexShrink: 0,
@@ -102,6 +106,7 @@ export default function Sidebar() {
         {/* Navigation Items */}
         <Stack spacing={0.5} component="nav">
           {NAV_ITEMS.map((item) => {
+            if (item.authOnly === 'guest' && isAuthenticated) return null;
             const isActive = pathname === item.href;
             const IconComponent = isActive ? item.activeIcon : item.icon;
 
@@ -209,10 +214,10 @@ export default function Sidebar() {
                 fontWeight: 800,
               }}
             >
-              Post
+              ارسال پست
             </Button>
           ) : (
-            <Tooltip title="Post">
+            <Tooltip title="ارسال پست">
               <IconButton
                 sx={{
                   width: 50,
@@ -234,50 +239,116 @@ export default function Sidebar() {
         </Box>
       </Box>
 
-      {/* User Account Profile Pill */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: isLarge ? 'space-between' : 'center',
-          p: isLarge ? '10px 12px' : '6px',
-          borderRadius: 9999,
-          cursor: 'pointer',
-          transition: 'background-color 0.2s ease',
-          '&:hover': {
-            backgroundColor: 'action.hover',
-          },
-        }}
-      >
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <Avatar
-            alt="Alex Dev"
-            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-            sx={{ width: 40, height: 40 }}
-          />
-          {isLarge && (
-            <Box sx={{ minWidth: 0, textAlign: 'left' }}>
-              <Typography
-                variant="body1"
-                noWrap
-                sx={{ fontWeight: 700, lineHeight: 1.2 }}
+      {/* User Account Profile Pill / Login CTA */}
+      {isAuthenticated && user ? (
+        <>
+          <Box
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: isLarge ? 'space-between' : 'center',
+              p: isLarge ? '10px 12px' : '6px',
+              borderRadius: 9999,
+              cursor: 'pointer',
+              transition: 'background-color 0.2s ease',
+              '&:hover': {
+                backgroundColor: 'action.hover',
+              },
+            }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Avatar
+                alt={user.name}
+                src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}
+                sx={{ width: 40, height: 40 }}
+              />
+              {isLarge && (
+                <Box sx={{ minWidth: 0, textAlign: 'right' }}>
+                  <Typography
+                    variant="body1"
+                    noWrap
+                    sx={{ fontWeight: 700, lineHeight: 1.2 }}
+                  >
+                    {user.name}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    noWrap
+                    sx={{ color: 'text.secondary', lineHeight: 1.2 }}
+                  >
+                    @{user.username}
+                  </Typography>
+                </Box>
+              )}
+            </Stack>
+            {isLarge && (
+              <MoreHorizIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+            )}
+          </Box>
+
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={() => setAnchorEl(null)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            sx={{
+              '& .MuiPaper-root': {
+                borderRadius: 3,
+                minWidth: 200,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+              },
+            }}
+          >
+            <MenuItem
+              onClick={() => {
+                setAnchorEl(null);
+                logout();
+              }}
+              sx={{ color: 'error.main', fontWeight: 600, gap: 1 }}
+            >
+              <LogoutIcon fontSize="small" />
+              خروج از حساب (@{user.username})
+            </MenuItem>
+          </Menu>
+        </>
+      ) : (
+        <Box sx={{ p: isLarge ? 1 : 0 }}>
+          {isLarge ? (
+            <Button
+              component={Link}
+              href="/login"
+              variant="outlined"
+              fullWidth
+              startIcon={<LoginIcon />}
+              sx={{
+                borderRadius: 9999,
+                fontWeight: 700,
+                py: 1,
+              }}
+            >
+              ورود به حساب
+            </Button>
+          ) : (
+            <Tooltip title="ورود به حساب">
+              <IconButton
+                component={Link}
+                href="/login"
+                sx={{
+                  width: 48,
+                  height: 48,
+                  mx: 'auto',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
               >
-                Alex Dev
-              </Typography>
-              <Typography
-                variant="body2"
-                noWrap
-                sx={{ color: 'text.secondary', lineHeight: 1.2 }}
-              >
-                @alex_builder
-              </Typography>
-            </Box>
+                <LoginIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           )}
-        </Stack>
-        {isLarge && (
-          <MoreHorizIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
-        )}
-      </Box>
+        </Box>
+      )}
     </Box>
   );
 }

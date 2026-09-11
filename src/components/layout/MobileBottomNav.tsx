@@ -16,11 +16,10 @@ import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import { useColorMode } from '@/theme/ThemeRegistry';
 
 const MOBILE_NAV_ITEMS = [
-  { label: 'Home', href: '/', icon: HomeOutlinedIcon, activeIcon: HomeIcon },
-  { label: 'Explore', href: '/explore', icon: SearchIcon, activeIcon: SearchIcon, isSearch: true },
-  { label: 'Grok', href: '/grok', icon: AutoAwesomeOutlinedIcon, activeIcon: AutoAwesomeIcon },
-  { label: 'Notifications', href: '/notifications', icon: NotificationsOutlinedIcon, activeIcon: NotificationsIcon },
-  { label: 'Messages', href: '/messages', icon: MailOutlineIcon, activeIcon: MailIcon },
+  { label: 'خانه', href: '/', icon: HomeOutlinedIcon, activeIcon: HomeIcon },
+  { label: 'کاوش', href: '/explore', icon: SearchIcon, activeIcon: SearchIcon, isSearch: true },
+  { label: 'اعلان‌ها', href: '/notifications', icon: NotificationsOutlinedIcon, activeIcon: NotificationsIcon },
+  { label: 'پیام‌ها', href: '/messages', icon: MailOutlineIcon, activeIcon: MailIcon },
 ];
 
 export default function MobileBottomNav() {

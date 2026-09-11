@@ -18,13 +18,13 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import LogoutIcon from '@mui/icons-material/Logout';
+import LoginIcon from '@mui/icons-material/Login';
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import { useColorMode } from '@/theme/ThemeRegistry';
+import { useAuth } from '@/hooks/useAuth';
 
 interface MobileDrawerProps {
   open: boolean;
@@ -33,10 +33,11 @@ interface MobileDrawerProps {
 
 export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const { mode, toggleColorMode } = useColorMode();
+  const { user, isAuthenticated, logout } = useAuth();
 
   return (
     <Drawer
-      anchor="left"
+      anchor="right"
       open={open}
       onClose={onClose}
       PaperProps={{
@@ -51,36 +52,52 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
       {/* Header with Close */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" sx={{ fontWeight: 800 }}>
-          Account Info
+          اطلاعات حساب
         </Typography>
-        <IconButton onClick={onClose} sx={{ color: 'text.primary' }} aria-label="Close menu">
+        <IconButton onClick={onClose} sx={{ color: 'text.primary' }} aria-label="بستن منو">
           <CloseIcon />
         </IconButton>
       </Box>
 
       {/* User Info */}
-      <Box sx={{ mb: 2 }}>
-        <Avatar
-          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-          alt="Alex Dev"
-          sx={{ width: 48, height: 48, mb: 1 }}
-        />
-        <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
-          Alex Dev
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5 }}>
-          @alex_builder
-        </Typography>
-
-        <Stack direction="row" spacing={2}>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            <Box component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>540</Box> Following
+      {isAuthenticated && user ? (
+        <Box sx={{ mb: 2 }}>
+          <Avatar
+            src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120'}
+            alt={user.name}
+            sx={{ width: 48, height: 48, mb: 1 }}
+          />
+          <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
+            {user.name}
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            <Box component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>12.4K</Box> Followers
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5 }}>
+            @{user.username}
           </Typography>
-        </Stack>
-      </Box>
+        </Box>
+      ) : (
+        <Box sx={{ mb: 2, p: 1.5, borderRadius: 2, backgroundColor: 'action.hover' }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5 }}>
+            شما هنوز وارد حساب خود نشده‌اید.
+          </Typography>
+          <ListItemButton
+            component={Link}
+            href="/login"
+            onClick={onClose}
+            sx={{
+              borderRadius: 8,
+              backgroundColor: 'primary.main',
+              color: '#ffffff',
+              justifyContent: 'center',
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+              },
+            }}
+          >
+            <LoginIcon sx={{ mr: 1, fontSize: 20 }} />
+            <Typography sx={{ fontWeight: 700, fontSize: '0.9rem' }}>ورود به حساب</Typography>
+          </ListItemButton>
+        </Box>
+      )}
 
       <Divider sx={{ my: 1.5 }} />
 
@@ -91,16 +108,7 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             <ListItemIcon sx={{ color: 'text.primary', minWidth: 40 }}>
               <PersonOutlineIcon />
             </ListItemIcon>
-            <ListItemText primary="Profile" primaryTypographyProps={{ fontWeight: 700 }} />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton component={Link} href="/premium" onClick={onClose} sx={{ borderRadius: 2, py: 1 }}>
-            <ListItemIcon sx={{ color: 'text.primary', minWidth: 40 }}>
-              <VerifiedOutlinedIcon />
-            </ListItemIcon>
-            <ListItemText primary="Premium" primaryTypographyProps={{ fontWeight: 700 }} />
+            <ListItemText primary="پروفایل" primaryTypographyProps={{ fontWeight: 700 }} />
           </ListItemButton>
         </ListItem>
 
@@ -109,36 +117,26 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             <ListItemIcon sx={{ color: 'text.primary', minWidth: 40 }}>
               <BookmarkBorderIcon />
             </ListItemIcon>
-            <ListItemText primary="Bookmarks" primaryTypographyProps={{ fontWeight: 700 }} />
+            <ListItemText primary="نشانک‌ها" primaryTypographyProps={{ fontWeight: 700 }} />
           </ListItemButton>
         </ListItem>
 
-        <ListItem disablePadding>
-          <ListItemButton component={Link} href="/communities" onClick={onClose} sx={{ borderRadius: 2, py: 1 }}>
-            <ListItemIcon sx={{ color: 'text.primary', minWidth: 40 }}>
-              <PeopleOutlineIcon />
-            </ListItemIcon>
-            <ListItemText primary="Communities" primaryTypographyProps={{ fontWeight: 700 }} />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton onClick={onClose} sx={{ borderRadius: 2, py: 1 }}>
-            <ListItemIcon sx={{ color: 'text.primary', minWidth: 40 }}>
-              <SettingsOutlinedIcon />
-            </ListItemIcon>
-            <ListItemText primary="Settings and privacy" primaryTypographyProps={{ fontWeight: 700 }} />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton component={Link} href="/login" onClick={onClose} sx={{ borderRadius: 2, py: 1 }}>
-            <ListItemIcon sx={{ color: 'text.primary', minWidth: 40 }}>
-              <PersonOutlineIcon />
-            </ListItemIcon>
-            <ListItemText primary="Sign in" primaryTypographyProps={{ fontWeight: 700 }} />
-          </ListItemButton>
-        </ListItem>
+        {isAuthenticated && (
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => {
+                logout();
+                onClose();
+              }}
+              sx={{ borderRadius: 2, py: 1, color: 'error.main' }}
+            >
+              <ListItemIcon sx={{ color: 'error.main', minWidth: 40 }}>
+                <LogoutIcon />
+              </ListItemIcon>
+              <ListItemText primary="خروج از حساب" primaryTypographyProps={{ fontWeight: 700 }} />
+            </ListItemButton>
+          </ListItem>
+        )}
       </List>
 
       <Divider sx={{ my: 1.5 }} />
@@ -150,7 +148,7 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             {mode === 'dark' ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
           </ListItemIcon>
           <ListItemText
-            primary={mode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            primary={mode === 'dark' ? 'حالت روشن' : 'حالت تیره'}
             primaryTypographyProps={{ fontWeight: 700 }}
           />
         </ListItemButton>

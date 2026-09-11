@@ -10,10 +10,12 @@ import {
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import { useColorMode } from '@/theme/ThemeRegistry';
+import { useAuth } from '@/hooks/useAuth';
 import MobileDrawer from './MobileDrawer';
 
 export default function MobileHeader() {
   const { mode, toggleColorMode } = useColorMode();
+  const { user, isAuthenticated } = useAuth();
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   return (
@@ -35,15 +37,15 @@ export default function MobileHeader() {
           borderColor: 'divider',
         }}
       >
-        {/* Left: Avatar trigger for drawer */}
+        {/* Avatar trigger for drawer */}
         <IconButton
           onClick={() => setDrawerOpen(true)}
           sx={{ p: 0.5, width: 44, height: 44 }}
-          aria-label="Open profile drawer"
+          aria-label="باز کردن منوی کاربری"
         >
           <Avatar
-            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-            alt="Alex Dev"
+            src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}
+            alt={user?.name || 'کاربر'}
             sx={{ width: 34, height: 34 }}
           />
         </IconButton>
