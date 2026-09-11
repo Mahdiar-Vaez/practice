@@ -21,7 +21,7 @@ import PublicIcon from '@mui/icons-material/Public';
 import { useAuth } from '@/hooks/useAuth';
 
 interface TweetComposerProps {
-  onPost?: (content: string) => void;
+  onPost?: (content: string) => Promise<void> | void;
 }
 
 const MAX_CHARS = 280;
@@ -30,19 +30,29 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
   const { user } = useAuth();
   const [content, setContent] = React.useState('');
   const [isFocused, setIsFocused] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const charCount = content.length;
   const progress = Math.min((charCount / MAX_CHARS) * 100, 100);
   const isOverLimit = charCount > MAX_CHARS;
-  const canPost = content.trim().length > 0 && !isOverLimit;
+  const canPost = content.trim().length > 0 && !isOverLimit && !isSubmitting;
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!canPost) return;
-    if (onPost) {
-      onPost(content);
+    const draftText = content;
+    setIsSubmitting(true);
+
+    try {
+      if (onPost) {
+        await onPost(draftText);
+      }
+      setContent('');
+      setIsFocused(false);
+    } catch {
+      // On failure, draft content is preserved so the user can re-try
+    } finally {
+      setIsSubmitting(false);
     }
-    setContent('');
-    setIsFocused(false);
   };
 
   return (
@@ -70,6 +80,7 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onFocus={() => setIsFocused(true)}
+          disabled={isSubmitting}
           sx={{
             width: '100%',
             color: 'text.primary',
@@ -126,22 +137,22 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
         >
           {/* Action Icons */}
           <Stack direction="row" spacing={0.25} sx={{ color: 'primary.main' }}>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن تصویر">
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن تصویر" disabled={isSubmitting}>
               <ImageOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن گیف">
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن گیف" disabled={isSubmitting}>
               <GifBoxOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="ایجاد نظرسنجی">
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="ایجاد نظرسنجی" disabled={isSubmitting}>
               <BallotOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن ایموجی">
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن ایموجی" disabled={isSubmitting}>
               <SentimentSatisfiedAltOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="زمان‌بندی ارسال">
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="زمان‌بندی ارسال" disabled={isSubmitting}>
               <CalendarTodayOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن موقعیت مکانی">
+            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن موقعیت مکانی" disabled={isSubmitting}>
               <FmdGoodOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
           </Stack>
@@ -177,9 +188,14 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
                 fontWeight: 700,
                 fontSize: '0.9375rem',
                 opacity: canPost ? 1 : 0.5,
+                minWidth: 90,
               }}
             >
-              ارسال پست
+              {isSubmitting ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                'ارسال پست'
+              )}
             </Button>
           </Stack>
         </Box>

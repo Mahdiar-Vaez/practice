@@ -6,11 +6,16 @@ import {
   Tabs,
   Tab,
   IconButton,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import AppLayout from '@/components/layout/AppLayout';
 import TweetComposer from '@/components/tweet/TweetComposer';
-import TweetCard, { TweetData } from '@/components/tweet/TweetCard';
+import TweetCard from '@/components/tweet/TweetCard';
+import { TweetData } from '@/types/api';
+import { tweetService } from '@/services/tweet.service';
 import { useColorMode } from '@/theme/ThemeRegistry';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -26,6 +31,11 @@ const INITIAL_TWEETS: TweetData[] = [
     time: '۲ ساعت پیش',
     content: 'نسخه ۱۶ نکست‌جی‌اس با کامپایل توربوپک فوق‌سریع، پشتیبانی رسمی از ری‌اکت ۱۹ و ارتقای چشمگیر سرور اکشن‌ها منتشر شد! 🚀\n\nبرای شروع دستور npx create-next-app@latest را اجرا کنید.',
     mediaUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
+    likesCount: 5890,
+    commentsCount: 342,
+    repostsCount: 1204,
+    views: '۱۴۲K',
+    isLiked: false,
     stats: {
       replies: 342,
       reposts: 1204,
@@ -43,6 +53,11 @@ const INITIAL_TWEETS: TweetData[] = [
     },
     time: '۴ ساعت پیش',
     content: 'ترکیب متریال یو‌آی نسخه ۶ با اپ‌روتر نکست‌جی‌اس و پشتیبانی کامل از حالت تاریک OLED و چیدمان راست‌چین (RTL)، تجربه‌ای کاملاً بومی و روان را برای کاربران فارسی‌زبان فراهم می‌کند.\n\n#ری‌اکت #توسعه_وب #طراحی_رابط_کاربری',
+    likesCount: 1430,
+    commentsCount: 89,
+    repostsCount: 215,
+    views: '۴۵.۸K',
+    isLiked: false,
     stats: {
       replies: 89,
       reposts: 215,
@@ -61,6 +76,11 @@ const INITIAL_TWEETS: TweetData[] = [
     time: '۶ ساعت پیش',
     content: 'طراحی ۳ ستونه مدرن با تراکم مناسب اطلاعات، مرزبندی‌های ظریف و انیمیشن‌های روان فیزیکی، همواره استاندارد طلایی داشبوردهای تعاملی و شبکه‌های اجتماعی است.',
     mediaUrl: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80',
+    likesCount: 890,
+    commentsCount: 56,
+    repostsCount: 132,
+    views: '۲۸.۱K',
+    isLiked: false,
     stats: {
       replies: 56,
       reposts: 132,
@@ -75,14 +95,41 @@ export default function HomePage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = React.useState(0);
   const [tweets, setTweets] = React.useState<TweetData[]>(INITIAL_TWEETS);
+  const [loading, setLoading] = React.useState(true);
+  const [snackbarMessage, setSnackbarMessage] = React.useState<string | null>(null);
+
+  // Fetch feed on initial load with fallback
+  React.useEffect(() => {
+    let isMounted = true;
+    tweetService
+      .getFeed()
+      .then((feed) => {
+        if (isMounted && feed.length > 0) {
+          setTweets(feed);
+        }
+      })
+      .catch(() => {
+        // Fallback silently to initial mock tweets if backend is not reachable
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
-  const handleNewTweet = (content: string) => {
-    const newTweet: TweetData = {
-      id: Date.now().toString(),
+  const handleNewTweet = async (content: string) => {
+    const tempId = `temp_${Date.now()}`;
+    const optimisticTweet: TweetData = {
+      id: tempId,
       author: {
         name: user?.name || 'کاربر دمو',
         handle: user ? `@${user.username}` : '@demo',
@@ -91,6 +138,11 @@ export default function HomePage() {
       },
       time: 'همین الان',
       content,
+      likesCount: 0,
+      commentsCount: 0,
+      repostsCount: 0,
+      views: '۱',
+      isLiked: false,
       stats: {
         replies: 0,
         reposts: 0,
@@ -99,7 +151,37 @@ export default function HomePage() {
       },
     };
 
-    setTweets([newTweet, ...tweets]);
+    // Optimistically prepend to feed
+    setTweets((prev) => [optimisticTweet, ...prev]);
+
+    try {
+      const createdTweet = await tweetService.createTweet(content);
+      // Replace optimistic placeholder with real tweet
+      setTweets((prev) =>
+        prev.map((t) => (t.id === tempId ? createdTweet : t))
+      );
+    } catch (err: any) {
+      // Rollback on failure
+      setTweets((prev) => prev.filter((t) => t.id !== tempId));
+      const message = err?.message || 'خطا در ثبت پست؛ ارتباط با سرور برقرار نشد. متن شما بازیابی شد.';
+      setSnackbarMessage(message);
+      // Re-throw so TweetComposer retains the draft text
+      throw err;
+    }
+  };
+
+  const handleCommentCountChange = (tweetId: string, newCount: number) => {
+    setTweets((prev) =>
+      prev.map((t) =>
+        t.id === tweetId
+          ? {
+              ...t,
+              commentsCount: newCount,
+              stats: t.stats ? { ...t.stats, replies: newCount } : undefined,
+            }
+          : t
+      )
+    );
   };
 
   return (
@@ -147,10 +229,37 @@ export default function HomePage() {
 
       {/* Feed List */}
       <Box component="section" aria-label="تایم‌لاین پست‌ها">
-        {tweets.map((tweet) => (
-          <TweetCard key={tweet.id} tweet={tweet} />
-        ))}
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+            <CircularProgress size={36} />
+          </Box>
+        ) : (
+          tweets.map((tweet) => (
+            <TweetCard
+              key={tweet.id}
+              tweet={tweet}
+              onError={(msg) => setSnackbarMessage(msg)}
+              onCommentCountChange={handleCommentCountChange}
+            />
+          ))
+        )}
       </Box>
+
+      {/* Persian Snackbar Notification for Offline / Errors */}
+      <Snackbar
+        open={Boolean(snackbarMessage)}
+        autoHideDuration={5000}
+        onClose={() => setSnackbarMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity="warning"
+          onClose={() => setSnackbarMessage(null)}
+          sx={{ width: '100%', borderRadius: 2 }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </AppLayout>
   );
 }

@@ -7,6 +7,8 @@ import {
   Typography,
   IconButton,
   Stack,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
@@ -18,45 +20,70 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import { TweetData } from '@/types/api';
+import { tweetService } from '@/services/tweet.service';
+import CommentsDialog from './CommentsDialog';
 
-export interface TweetData {
-  id: string;
-  author: {
-    name: string;
-    handle: string;
-    avatar: string;
-    verified?: boolean;
-  };
-  time: string;
-  content: string;
-  mediaUrl?: string;
-  stats: {
-    replies: number;
-    reposts: number;
-    likes: number;
-    views: string;
-  };
-}
+export type { TweetData };
 
 interface TweetCardProps {
   tweet: TweetData;
+  onError?: (message: string) => void;
+  onCommentCountChange?: (tweetId: string, newCount: number) => void;
 }
 
-export default function TweetCard({ tweet }: TweetCardProps) {
-  const [liked, setLiked] = React.useState(false);
-  const [likeCount, setLikeCount] = React.useState(tweet.stats.likes);
+export default function TweetCard({
+  tweet,
+  onError,
+  onCommentCountChange,
+}: TweetCardProps) {
+  const initialLikes = tweet.likesCount ?? tweet.stats?.likes ?? 0;
+  const initialReplies = tweet.commentsCount ?? tweet.stats?.replies ?? 0;
+  const initialReposts = tweet.repostsCount ?? tweet.stats?.reposts ?? 0;
+  const viewsCount = tweet.views ?? tweet.stats?.views ?? '۱';
+
+  const [liked, setLiked] = React.useState(tweet.isLiked ?? false);
+  const [likeCount, setLikeCount] = React.useState(initialLikes);
+  const [commentCount, setCommentCount] = React.useState(initialReplies);
   const [reposted, setReposted] = React.useState(false);
-  const [repostCount, setRepostCount] = React.useState(tweet.stats.reposts);
+  const [repostCount, setRepostCount] = React.useState(initialReposts);
   const [bookmarked, setBookmarked] = React.useState(false);
 
-  const handleLike = (e: React.MouseEvent) => {
+  const [commentsOpen, setCommentsOpen] = React.useState(false);
+  const [localError, setLocalError] = React.useState<string | null>(null);
+
+  // Sync state if tweet prop changes
+  React.useEffect(() => {
+    setLiked(tweet.isLiked ?? false);
+    setLikeCount(tweet.likesCount ?? tweet.stats?.likes ?? 0);
+    setCommentCount(tweet.commentsCount ?? tweet.stats?.replies ?? 0);
+  }, [tweet]);
+
+  const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (liked) {
-      setLikeCount((prev) => prev - 1);
-      setLiked(false);
-    } else {
-      setLikeCount((prev) => prev + 1);
-      setLiked(true);
+    const prevLiked = liked;
+    const prevCount = likeCount;
+
+    // Optimistic toggle
+    const nextLiked = !prevLiked;
+    const nextCount = nextLiked ? prevCount + 1 : Math.max(0, prevCount - 1);
+    setLiked(nextLiked);
+    setLikeCount(nextCount);
+
+    try {
+      const result = await tweetService.toggleLike(tweet.id);
+      setLiked(result.liked);
+      setLikeCount(result.likesCount);
+    } catch (err: any) {
+      // Rollback on error
+      setLiked(prevLiked);
+      setLikeCount(prevCount);
+      const msg = err?.message || 'خطا در تغییر وضعیت لایک؛ ارتباط با سرور برقرار نشد.';
+      if (onError) {
+        onError(msg);
+      } else {
+        setLocalError(msg);
+      }
     }
   };
 
@@ -76,290 +103,329 @@ export default function TweetCard({ tweet }: TweetCardProps) {
     setBookmarked((prev) => !prev);
   };
 
+  const handleOpenComments = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCommentsOpen(true);
+  };
+
+  const handleCommentAdded = () => {
+    const updatedCount = commentCount + 1;
+    setCommentCount(updatedCount);
+    if (onCommentCountChange) {
+      onCommentCountChange(tweet.id, updatedCount);
+    }
+  };
+
   return (
-    <Box
-      sx={{
-        px: 2,
-        py: 1.5,
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        display: 'flex',
-        gap: 1.5,
-        cursor: 'pointer',
-        transition: 'background-color 0.15s ease',
-        '&:hover': {
-          backgroundColor: 'action.hover',
-        },
-      }}
-    >
-      {/* Author Avatar */}
-      <Avatar
-        src={tweet.author.avatar}
-        alt={tweet.author.name}
-        sx={{ width: 40, height: 40 }}
-      />
+    <>
+      <Box
+        onClick={handleOpenComments}
+        sx={{
+          px: 2,
+          py: 1.5,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          display: 'flex',
+          gap: 1.5,
+          cursor: 'pointer',
+          transition: 'background-color 0.15s ease',
+          '&:hover': {
+            backgroundColor: 'action.hover',
+          },
+        }}
+      >
+        {/* Author Avatar */}
+        <Avatar
+          src={tweet.author.avatar}
+          alt={tweet.author.name}
+          sx={{ width: 40, height: 40 }}
+        />
 
-      {/* Tweet Body & Content */}
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        {/* Header: Name, Handle, Timestamp, Menu */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Stack
-            direction="row"
-            spacing={0.5}
-            alignItems="center"
-            sx={{ flexWrap: 'wrap', minWidth: 0 }}
-          >
-            <Typography
-              variant="body1"
-              sx={{
-                fontWeight: 700,
-                color: 'text.primary',
-                '&:hover': { textDecoration: 'underline' },
-              }}
-            >
-              {tweet.author.name}
-            </Typography>
-            {tweet.author.verified && (
-              <VerifiedIcon sx={{ fontSize: 18, color: 'primary.main' }} />
-            )}
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {tweet.author.handle}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              ·
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: 'text.secondary',
-                '&:hover': { textDecoration: 'underline' },
-              }}
-            >
-              {tweet.time}
-            </Typography>
-          </Stack>
-
-          <IconButton
-            size="small"
-            sx={{
-              color: 'text.secondary',
-              p: 0.5,
-              '&:hover': {
-                color: 'primary.main',
-                backgroundColor: 'rgba(29, 155, 240, 0.1)',
-              },
-            }}
-            aria-label="گزینه‌های بیشتر"
-          >
-            <MoreHorizIcon fontSize="small" />
-          </IconButton>
-        </Box>
-
-        {/* Text Content */}
-        <Typography
-          variant="body1"
-          sx={{
-            color: 'text.primary',
-            mt: 0.5,
-            whiteSpace: 'pre-line',
-            wordBreak: 'break-word',
-            fontSize: '0.9375rem',
-            lineHeight: 1.45,
-          }}
-        >
-          {tweet.content}
-        </Typography>
-
-        {/* Optional Media Image */}
-        {tweet.mediaUrl && (
+        {/* Tweet Body & Content */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          {/* Header: Name, Handle, Timestamp, Menu */}
           <Box
             sx={{
-              mt: 1.5,
-              borderRadius: 4,
-              overflow: 'hidden',
-              border: '1px solid',
-              borderColor: 'divider',
-              maxHeight: 380,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
-            <Box
-              component="img"
-              src={tweet.mediaUrl}
-              alt="Tweet Media"
+            <Stack
+              direction="row"
+              spacing={0.5}
+              alignItems="center"
+              sx={{ flexWrap: 'wrap', minWidth: 0 }}
+            >
+              <Typography
+                variant="body1"
+                sx={{
+                  fontWeight: 700,
+                  color: 'text.primary',
+                  '&:hover': { textDecoration: 'underline' },
+                }}
+              >
+                {tweet.author.name}
+              </Typography>
+              {tweet.author.verified && (
+                <VerifiedIcon sx={{ fontSize: 18, color: 'primary.main' }} />
+              )}
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {tweet.author.handle}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                ·
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.secondary',
+                  '&:hover': { textDecoration: 'underline' },
+                }}
+              >
+                {tweet.time}
+              </Typography>
+            </Stack>
+
+            <IconButton
+              size="small"
+              onClick={(e) => e.stopPropagation()}
               sx={{
-                width: '100%',
-                height: 'auto',
-                display: 'block',
-                objectFit: 'cover',
+                color: 'text.secondary',
+                p: 0.5,
+                '&:hover': {
+                  color: 'primary.main',
+                  backgroundColor: 'rgba(29, 155, 240, 0.1)',
+                },
               }}
-            />
+              aria-label="گزینه‌های بیشتر"
+            >
+              <MoreHorizIcon fontSize="small" />
+            </IconButton>
           </Box>
-        )}
 
-        {/* Interaction Buttons Bar */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            mt: 1.5,
-            maxWidth: 450,
-            color: 'text.secondary',
-          }}
-        >
-          {/* Reply */}
-          <Stack
-            direction="row"
-            spacing={0.5}
-            alignItems="center"
+          {/* Text Content */}
+          <Typography
+            variant="body1"
             sx={{
-              cursor: 'pointer',
-              transition: 'color 0.2s',
-              '&:hover': {
-                color: 'primary.main',
-                '& .MuiIconButton-root': {
-                  backgroundColor: 'rgba(29, 155, 240, 0.1)',
-                  color: 'primary.main',
-                },
-              },
+              color: 'text.primary',
+              mt: 0.5,
+              whiteSpace: 'pre-line',
+              wordBreak: 'break-word',
+              fontSize: '0.9375rem',
+              lineHeight: 1.45,
             }}
           >
-            <IconButton size="small" sx={{ color: 'inherit', p: 0.8 }}>
-              <ChatBubbleOutlineIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-            <Typography variant="caption" sx={{ fontSize: '0.8125rem' }}>
-              {tweet.stats.replies}
-            </Typography>
-          </Stack>
+            {tweet.content}
+          </Typography>
 
-          {/* Repost */}
-          <Stack
-            direction="row"
-            spacing={0.5}
-            alignItems="center"
-            onClick={handleRepost}
+          {/* Optional Media Image */}
+          {tweet.mediaUrl && (
+            <Box
+              sx={{
+                mt: 1.5,
+                borderRadius: 4,
+                overflow: 'hidden',
+                border: '1px solid',
+                borderColor: 'divider',
+                maxHeight: 380,
+              }}
+            >
+              <Box
+                component="img"
+                src={tweet.mediaUrl}
+                alt="تصویر ضمیمه پست"
+                sx={{
+                  width: '100%',
+                  height: 'auto',
+                  display: 'block',
+                  objectFit: 'cover',
+                }}
+              />
+            </Box>
+          )}
+
+          {/* Interaction Buttons Bar */}
+          <Box
             sx={{
-              cursor: 'pointer',
-              color: reposted ? 'success.main' : 'inherit',
-              transition: 'color 0.2s',
-              '&:hover': {
-                color: 'success.main',
-                '& .MuiIconButton-root': {
-                  backgroundColor: 'rgba(0, 186, 124, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mt: 1.5,
+              maxWidth: 450,
+              color: 'text.secondary',
+            }}
+          >
+            {/* Reply / Comment */}
+            <Stack
+              direction="row"
+              spacing={0.5}
+              alignItems="center"
+              onClick={handleOpenComments}
+              sx={{
+                cursor: 'pointer',
+                transition: 'color 0.2s',
+                '&:hover': {
+                  color: 'primary.main',
+                  '& .MuiIconButton-root': {
+                    backgroundColor: 'rgba(29, 155, 240, 0.1)',
+                    color: 'primary.main',
+                  },
+                },
+              }}
+            >
+              <IconButton size="small" sx={{ color: 'inherit', p: 0.8 }} aria-label="ارسال پاسخ">
+                <ChatBubbleOutlineIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+              <Typography variant="caption" sx={{ fontSize: '0.8125rem' }}>
+                {commentCount}
+              </Typography>
+            </Stack>
+
+            {/* Repost */}
+            <Stack
+              direction="row"
+              spacing={0.5}
+              alignItems="center"
+              onClick={handleRepost}
+              sx={{
+                cursor: 'pointer',
+                color: reposted ? 'success.main' : 'inherit',
+                transition: 'color 0.2s',
+                '&:hover': {
                   color: 'success.main',
+                  '& .MuiIconButton-root': {
+                    backgroundColor: 'rgba(0, 186, 124, 0.1)',
+                    color: 'success.main',
+                  },
                 },
-              },
-            }}
-          >
-            <IconButton size="small" sx={{ color: 'inherit', p: 0.8 }}>
-              <RepeatIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-            <Typography variant="caption" sx={{ fontSize: '0.8125rem' }}>
-              {repostCount}
-            </Typography>
-          </Stack>
+              }}
+            >
+              <IconButton size="small" sx={{ color: 'inherit', p: 0.8 }} aria-label="بازنشر">
+                <RepeatIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+              <Typography variant="caption" sx={{ fontSize: '0.8125rem' }}>
+                {repostCount}
+              </Typography>
+            </Stack>
 
-          {/* Like */}
-          <Stack
-            direction="row"
-            spacing={0.5}
-            alignItems="center"
-            onClick={handleLike}
-            sx={{
-              cursor: 'pointer',
-              color: liked ? '#f91880' : 'inherit',
-              transition: 'color 0.2s',
-              '&:hover': {
-                color: '#f91880',
-                '& .MuiIconButton-root': {
-                  backgroundColor: 'rgba(249, 24, 128, 0.1)',
+            {/* Like */}
+            <Stack
+              direction="row"
+              spacing={0.5}
+              alignItems="center"
+              onClick={handleLike}
+              sx={{
+                cursor: 'pointer',
+                color: liked ? '#f91880' : 'inherit',
+                transition: 'color 0.2s',
+                '&:hover': {
                   color: '#f91880',
-                },
-              },
-            }}
-          >
-            <IconButton size="small" sx={{ color: 'inherit', p: 0.8 }}>
-              {liked ? (
-                <FavoriteIcon sx={{ fontSize: 18, color: '#f91880' }} />
-              ) : (
-                <FavoriteBorderIcon sx={{ fontSize: 18 }} />
-              )}
-            </IconButton>
-            <Typography variant="caption" sx={{ fontSize: '0.8125rem' }}>
-              {likeCount}
-            </Typography>
-          </Stack>
-
-          {/* Views */}
-          <Stack
-            direction="row"
-            spacing={0.5}
-            alignItems="center"
-            sx={{
-              cursor: 'pointer',
-              transition: 'color 0.2s',
-              '&:hover': {
-                color: 'primary.main',
-                '& .MuiIconButton-root': {
-                  backgroundColor: 'rgba(29, 155, 240, 0.1)',
-                  color: 'primary.main',
-                },
-              },
-            }}
-          >
-            <IconButton size="small" sx={{ color: 'inherit', p: 0.8 }}>
-              <BarChartIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-            <Typography variant="caption" sx={{ fontSize: '0.8125rem' }}>
-              {tweet.stats.views}
-            </Typography>
-          </Stack>
-
-          {/* Bookmark & Share Icons */}
-          <Stack direction="row" spacing={0.25}>
-            <IconButton
-              size="small"
-              onClick={handleBookmark}
-              sx={{
-                color: bookmarked ? 'primary.main' : 'inherit',
-                p: 0.8,
-                '&:hover': {
-                  color: 'primary.main',
-                  backgroundColor: 'rgba(29, 155, 240, 0.1)',
+                  '& .MuiIconButton-root': {
+                    backgroundColor: 'rgba(249, 24, 128, 0.1)',
+                    color: '#f91880',
+                  },
                 },
               }}
-              aria-label="نشانک‌گذاری"
             >
-              {bookmarked ? (
-                <BookmarkIcon sx={{ fontSize: 18, color: 'primary.main' }} />
-              ) : (
-                <BookmarkBorderIcon sx={{ fontSize: 18 }} />
-              )}
-            </IconButton>
+              <IconButton size="small" sx={{ color: 'inherit', p: 0.8 }} aria-label="پسندیدن">
+                {liked ? (
+                  <FavoriteIcon sx={{ fontSize: 18, color: '#f91880' }} />
+                ) : (
+                  <FavoriteBorderIcon sx={{ fontSize: 18 }} />
+                )}
+              </IconButton>
+              <Typography variant="caption" sx={{ fontSize: '0.8125rem' }}>
+                {likeCount}
+              </Typography>
+            </Stack>
 
-            <IconButton
-              size="small"
+            {/* Views */}
+            <Stack
+              direction="row"
+              spacing={0.5}
+              alignItems="center"
+              onClick={(e) => e.stopPropagation()}
               sx={{
-                color: 'inherit',
-                p: 0.8,
+                cursor: 'pointer',
+                transition: 'color 0.2s',
                 '&:hover': {
                   color: 'primary.main',
-                  backgroundColor: 'rgba(29, 155, 240, 0.1)',
+                  '& .MuiIconButton-root': {
+                    backgroundColor: 'rgba(29, 155, 240, 0.1)',
+                    color: 'primary.main',
+                  },
                 },
               }}
-              aria-label="اشتراک‌گذاری"
             >
-              <IosShareIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Stack>
+              <IconButton size="small" sx={{ color: 'inherit', p: 0.8 }} aria-label="بازدیدها">
+                <BarChartIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+              <Typography variant="caption" sx={{ fontSize: '0.8125rem' }}>
+                {viewsCount}
+              </Typography>
+            </Stack>
+
+            {/* Bookmark & Share Icons */}
+            <Stack direction="row" spacing={0.25} onClick={(e) => e.stopPropagation()}>
+              <IconButton
+                size="small"
+                onClick={handleBookmark}
+                sx={{
+                  color: bookmarked ? 'primary.main' : 'inherit',
+                  p: 0.8,
+                  '&:hover': {
+                    color: 'primary.main',
+                    backgroundColor: 'rgba(29, 155, 240, 0.1)',
+                  },
+                }}
+                aria-label="نشانک‌گذاری"
+              >
+                {bookmarked ? (
+                  <BookmarkIcon sx={{ fontSize: 18, color: 'primary.main' }} />
+                ) : (
+                  <BookmarkBorderIcon sx={{ fontSize: 18 }} />
+                )}
+              </IconButton>
+
+              <IconButton
+                size="small"
+                sx={{
+                  color: 'inherit',
+                  p: 0.8,
+                  '&:hover': {
+                    color: 'primary.main',
+                    backgroundColor: 'rgba(29, 155, 240, 0.1)',
+                  },
+                }}
+                aria-label="اشتراک‌گذاری"
+              >
+                <IosShareIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Stack>
+          </Box>
         </Box>
       </Box>
-    </Box>
+
+      {/* Local fallback snackbar if onError prop is not passed */}
+      <Snackbar
+        open={Boolean(localError)}
+        autoHideDuration={4000}
+        onClose={() => setLocalError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="warning" onClose={() => setLocalError(null)} sx={{ width: '100%' }}>
+          {localError}
+        </Alert>
+      </Snackbar>
+
+      {/* Interactive Comments Dialog */}
+      <CommentsDialog
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        tweet={tweet}
+        onCommentAdded={handleCommentAdded}
+      />
+    </>
   );
 }
