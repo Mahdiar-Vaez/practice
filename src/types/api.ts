@@ -20,6 +20,20 @@ export interface LoginResponseData {
   user: User;
 }
 
+export interface RegisterDTO {
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface UpdateProfileDTO {
+  name?: string;
+  bio?: string;
+  avatar?: string;
+}
+
+
 export interface Author {
   name: string;
   handle: string;

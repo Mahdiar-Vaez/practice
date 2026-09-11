@@ -204,7 +204,7 @@ export default function TweetCard({
             </IconButton>
           </Box>
 
-          {/* Text Content */}
+          {/* Text Content with Clickable Hashtags */}
           <Typography
             variant="body1"
             sx={{
@@ -216,34 +216,88 @@ export default function TweetCard({
               lineHeight: 1.45,
             }}
           >
-            {tweet.content}
+            {(() => {
+              const hashtagRegex = /(#[a-zA-Z0-9_\u0600-\u06FF\uFB8A\u067E\u0686\u06AF\u200c]+)/g;
+              const parts = tweet.content.split(hashtagRegex);
+              return parts.map((part, idx) => {
+                if (part.startsWith('#')) {
+                  return (
+                    <Box
+                      component="span"
+                      key={idx}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.location.href = `/explore?q=${encodeURIComponent(part)}`;
+                      }}
+                      sx={{
+                        color: 'primary.main',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        mx: 0.25,
+                        '&:hover': { textDecoration: 'underline' },
+                      }}
+                    >
+                      {part}
+                    </Box>
+                  );
+                }
+                return part;
+              });
+            })()}
           </Typography>
 
-          {/* Optional Media Image */}
+          {/* Optional Media Image or Document */}
           {tweet.mediaUrl && (
-            <Box
-              sx={{
-                mt: 1.5,
-                borderRadius: 4,
-                overflow: 'hidden',
-                border: '1px solid',
-                borderColor: 'divider',
-                maxHeight: 380,
-              }}
-            >
+            /\.(pdf|docx?|txt)(\?.*)?$/i.test(tweet.mediaUrl) ? (
               <Box
-                component="img"
-                src={tweet.mediaUrl}
-                alt="تصویر ضمیمه پست"
-                sx={{
-                  width: '100%',
-                  height: 'auto',
-                  display: 'block',
-                  objectFit: 'cover',
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(tweet.mediaUrl, '_blank');
                 }}
-              />
-            </Box>
+                sx={{
+                  mt: 1.5,
+                  p: 1.5,
+                  borderRadius: 3,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  backgroundColor: 'action.hover',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  cursor: 'pointer',
+                  '&:hover': { borderColor: 'primary.main' },
+                }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                  📄 مشاهده و دریافت سند ضمیمه شده
+                </Typography>
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  mt: 1.5,
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  maxHeight: 380,
+                }}
+              >
+                <Box
+                  component="img"
+                  src={tweet.mediaUrl}
+                  alt="تصویر ضمیمه پست"
+                  sx={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                    objectFit: 'cover',
+                  }}
+                />
+              </Box>
+            )
           )}
+
 
           {/* Interaction Buttons Bar */}
           <Box

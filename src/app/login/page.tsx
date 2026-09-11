@@ -13,67 +13,138 @@ import {
   IconButton,
   InputAdornment,
   Paper,
-  Chip,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import Link from 'next/link';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
 import { useRouter } from 'next/navigation';
-import { useForm } from '@/hooks/useForm';
 import { useAuth } from '@/hooks/useAuth';
-import { loginFormSchema, LoginFormValues } from '@/validations/login.schema';
 import api from '@/lib/api';
 import { ApiResponse, LoginResponseData } from '@/types/api';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  identifier: z.string().min(1, 'ایمیل یا نام کاربری الزامی است'),
+  password: z.string().min(1, 'رمز عبور الزامی است'),
+});
+
+const registerSchema = z
+  .object({
+    name: z.string().min(2, 'نام باید حداقل ۲ کاراکتر باشد'),
+    username: z
+      .string()
+      .min(3, 'نام کاربری باید حداقل ۳ کاراکتر باشد')
+      .regex(/^[a-zA-Z0-9_]+$/, 'نام کاربری فقط می‌تواند شامل حروف انگلیسی، اعداد و زیرخط باشد'),
+    email: z.string().email('فرمت ایمیل نامعتبر است'),
+    password: z.string().min(6, 'رمز عبور باید حداقل ۶ کاراکتر باشد'),
+    confirmPassword: z.string().min(6, 'تکرار رمز عبور الزامی است'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'رمز عبور و تکرار آن یکسان نیستند',
+    path: ['confirmPassword'],
+  });
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated } = useAuth();
+  const [tab, setTab] = React.useState<0 | 1>(0); // 0: Login, 1: Register
   const [showPassword, setShowPassword] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [serverError, setServerError] = React.useState<string | null>(null);
 
-  // If already authenticated, redirect to home
+  // Login form state
+  const [loginForm, setLoginForm] = React.useState({
+    identifier: '',
+    password: '',
+  });
+  const [loginErrors, setLoginErrors] = React.useState<Record<string, string>>({});
+
+  // Register form state
+  const [registerForm, setRegisterForm] = React.useState({
+    name: '',
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [registerErrors, setRegisterErrors] = React.useState<Record<string, string>>({});
+
+  // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
       router.push('/');
     }
   }, [isAuthenticated, router]);
 
-  const {
-    values,
-    errors,
-    touched,
-    isSubmitting,
-    serverError,
-    setServerError,
-    handleChange,
-    handleBlur,
-    setFieldValue,
-    handleSubmit,
-  } = useForm<LoginFormValues>({
-    schema: loginFormSchema,
-    initialValues: {
-      identifier: '',
-      password: '',
-    },
-    onSubmit: async (formValues) => {
-      try {
-        const response = await api.post<ApiResponse<LoginResponseData>>('/auth/login', formValues);
-        if (response.data.success && response.data.data) {
-          login(response.data.data);
-          router.push('/');
-        } else {
-          setServerError(response.data.message || 'ورود ناموفق بود');
-        }
-      } catch (err: any) {
-        setServerError(err.message || 'ایمیل/نام کاربری یا رمز عبور اشتباه است');
-      }
-    },
-  });
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setServerError(null);
+    const result = loginSchema.safeParse(loginForm);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach((err: any) => {
+        if (err.path[0]) fieldErrors[err.path[0].toString()] = err.message;
+      });
+      setLoginErrors(fieldErrors);
+      return;
+    }
 
-  const handleFillDemo = () => {
-    setFieldValue('identifier', 'demo@example.com');
-    setFieldValue('password', 'password123');
+    setLoginErrors({});
+    setLoading(true);
+
+    try {
+      const response = await api.post<ApiResponse<LoginResponseData>>('/auth/login', loginForm);
+      if (response.data.success && response.data.data) {
+        login(response.data.data);
+        router.push('/');
+      } else {
+        setServerError(response.data.message || 'اطلاعات ورود اشتباه است');
+      }
+    } catch (err: any) {
+      setServerError(err.message || 'ایمیل/نام کاربری یا رمز عبور اشتباه است');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setServerError(null);
+    const result = registerSchema.safeParse(registerForm);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach((err: any) => {
+        if (err.path[0]) fieldErrors[err.path[0].toString()] = err.message;
+      });
+      setRegisterErrors(fieldErrors);
+      return;
+    }
+
+    setRegisterErrors({});
+    setLoading(true);
+
+    try {
+      const response = await api.post<ApiResponse<LoginResponseData>>('/auth/register', {
+        name: registerForm.name,
+        username: registerForm.username,
+        email: registerForm.email,
+        password: registerForm.password,
+      });
+
+      if (response.data.success && response.data.data) {
+        login(response.data.data);
+        router.push('/');
+      } else {
+        setServerError(response.data.message || 'ثبت‌نام با خطا مواجه شد');
+      }
+    } catch (err: any) {
+      setServerError(err.message || 'خطا در ثبت‌نام؛ لطفاً اطلاعات ورودی را بررسی کنید');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -88,13 +159,7 @@ export default function LoginPage() {
         py: { xs: 3, sm: 6 },
       }}
     >
-      <Container
-        maxWidth="xs"
-        sx={{
-          width: '100%',
-          px: { xs: 0, sm: 2 },
-        }}
-      >
+      <Container maxWidth="xs" sx={{ width: '100%', px: { xs: 0, sm: 2 } }}>
         <Paper
           elevation={0}
           sx={{
@@ -109,26 +174,12 @@ export default function LoginPage() {
             },
           }}
         >
-          {/* Top Logo & Back to Home */}
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              mb: 3,
-            }}
-          >
-            <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <IconButton size="small" title="بازگشت به خانه">
-                <ArrowForwardIcon sx={{ transform: 'rotate(180deg)' }} />
-              </IconButton>
-            </Link>
-
-            {/* X Logo */}
+          {/* Logo */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
             <Box
               sx={{
-                width: 42,
-                height: 42,
+                width: 44,
+                height: 44,
                 color: 'text.primary',
                 display: 'flex',
                 alignItems: 'center',
@@ -139,210 +190,175 @@ export default function LoginPage() {
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
             </Box>
-
-            <Box sx={{ width: 34 }} />
           </Box>
 
-          <Typography
-            variant="h5"
-            component="h1"
-            sx={{
-              fontWeight: 800,
-              mb: 1,
-              textAlign: 'center',
-              fontSize: { xs: '1.35rem', sm: '1.6rem' },
+          {/* Navigation Tabs */}
+          <Tabs
+            value={tab}
+            onChange={(_e, v) => {
+              setTab(v);
+              setServerError(null);
             }}
+            variant="fullWidth"
+            sx={{ mb: 3 }}
           >
-            ورود به توییتر / X
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              color: 'text.secondary',
-              mb: 3,
-              textAlign: 'center',
-            }}
-          >
-            برای ادامه، لطفاً اطلاعات حساب خود را وارد نمایید
-          </Typography>
+            <Tab icon={<PersonOutlineIcon />} iconPosition="start" label="ورود به حساب" />
+            <Tab icon={<HowToRegIcon />} iconPosition="start" label="ثبت‌نام حساب" />
+          </Tabs>
 
-          {/* Quick-fill Demo Account Banner */}
-          <Box
-            sx={{
-              mb: 3,
-              p: 1.5,
-              borderRadius: 2,
-              backgroundColor: 'action.hover',
-              border: '1px dashed',
-              borderColor: 'primary.main',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1,
-              alignItems: 'center',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Chip
-                label="حساب آزمایشی آماده"
-                size="small"
-                color="primary"
-                variant="outlined"
-                sx={{ fontWeight: 600, fontSize: '0.75rem' }}
-              />
-            </Box>
-            <Typography variant="caption" sx={{ color: 'text.secondary', textAlign: 'center' }}>
-              نام کاربری: <b>demo@example.com</b> | رمز: <b>password123</b>
-            </Typography>
-            <Button
-              size="small"
-              variant="contained"
-              color="primary"
-              onClick={handleFillDemo}
-              startIcon={<PersonOutlineIcon />}
-              sx={{
-                borderRadius: 4,
-                fontSize: '0.8125rem',
-                py: 0.5,
-                px: 2,
-              }}
-            >
-              تکمیل فرم با کاربر دمو
-            </Button>
-          </Box>
-
-          {/* Server Error Alert */}
           {serverError && (
-            <Alert
-              severity="error"
-              sx={{
-                mb: 2.5,
-                borderRadius: 2,
-                fontSize: '0.875rem',
-              }}
-            >
+            <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }}>
               {serverError}
             </Alert>
           )}
 
-          {/* Form */}
-          <Box component="form" onSubmit={handleSubmit} noValidate>
-            {/* Identifier input */}
-            <TextField
-              fullWidth
-              id="identifier"
-              name="identifier"
-              label="ایمیل یا نام کاربری"
-              placeholder="demo@example.com یا demo"
-              value={values.identifier}
-              onChange={handleChange('identifier')}
-              onBlur={handleBlur('identifier')}
-              error={Boolean(touched.identifier && errors.identifier)}
-              helperText={touched.identifier && errors.identifier}
-              margin="normal"
-              autoComplete="username"
-              disabled={isSubmitting}
-              sx={{
-                mb: 2,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2.5,
-                },
-              }}
-            />
+          {/* Tab 0: Login */}
+          {tab === 0 && (
+            <Box component="form" onSubmit={handleLoginSubmit} noValidate>
+              <TextField
+                fullWidth
+                id="identifier"
+                name="identifier"
+                label="ایمیل یا نام کاربری"
+                value={loginForm.identifier}
+                onChange={(e) => setLoginForm({ ...loginForm, identifier: e.target.value })}
+                error={Boolean(loginErrors.identifier)}
+                helperText={loginErrors.identifier}
+                disabled={loading}
+                autoComplete="username"
+                sx={{ mb: 2.5 }}
+              />
 
-            {/* Password input */}
-            <TextField
-              fullWidth
-              id="password"
-              name="password"
-              label="رمز عبور"
-              type={showPassword ? 'text' : 'password'}
-              value={values.password}
-              onChange={handleChange('password')}
-              onBlur={handleBlur('password')}
-              error={Boolean(touched.password && errors.password)}
-              helperText={touched.password && errors.password}
-              margin="normal"
-              autoComplete="current-password"
-              disabled={isSubmitting}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="تغییر نمایش رمز عبور"
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                      size="small"
-                    >
-                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                mb: 3,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2.5,
-                },
-              }}
-            />
+              <TextField
+                fullWidth
+                id="password"
+                name="password"
+                label="رمز عبور"
+                type={showPassword ? 'text' : 'password'}
+                value={loginForm.password}
+                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                error={Boolean(loginErrors.password)}
+                helperText={loginErrors.password}
+                disabled={loading}
+                autoComplete="current-password"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        edge="end"
+                        size="small"
+                        aria-label="نمایش/مخفی‌سازی رمز عبور"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 3 }}
+              />
 
-            {/* Submit button */}
-            <Button
-              fullWidth
-              type="submit"
-              variant="contained"
-              color="secondary"
-              disabled={isSubmitting}
-              sx={{
-                py: 1.4,
-                borderRadius: 8,
-                fontWeight: 700,
-                fontSize: '1rem',
-                minHeight: 48,
-                mb: 2,
-              }}
-            >
-              {isSubmitting ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                'ورود به حساب کاربری'
-              )}
-            </Button>
-
-            <Button
-              fullWidth
-              variant="outlined"
-              sx={{
-                py: 1.2,
-                borderRadius: 8,
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                mb: 3,
-              }}
-            >
-              فراموشی رمز عبور؟
-            </Button>
-
-            <Divider sx={{ mb: 3, color: 'text.secondary', fontSize: '0.8125rem' }}>
-              یا
-            </Divider>
-
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                حساب کاربری ندارید؟{' '}
-                <Link
-                  href="/signup"
-                  style={{
-                    color: '#1d9bf0',
-                    textDecoration: 'none',
-                    fontWeight: 700,
-                  }}
-                >
-                  ثبت‌نام کنید
-                </Link>
-              </Typography>
+              <Button
+                fullWidth
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={loading}
+                sx={{
+                  py: 1.4,
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  borderRadius: 9999,
+                }}
+              >
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'ورود به حساب'}
+              </Button>
             </Box>
-          </Box>
+          )}
+
+          {/* Tab 1: Register */}
+          {tab === 1 && (
+            <Box component="form" onSubmit={handleRegisterSubmit} noValidate>
+              <TextField
+                fullWidth
+                label="نام و نام خانوادگی"
+                value={registerForm.name}
+                onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
+                error={Boolean(registerErrors.name)}
+                helperText={registerErrors.name}
+                disabled={loading}
+                sx={{ mb: 2 }}
+              />
+
+              <TextField
+                fullWidth
+                label="نام کاربری (انگلیسی)"
+                value={registerForm.username}
+                onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
+                error={Boolean(registerErrors.username)}
+                helperText={registerErrors.username}
+                disabled={loading}
+                sx={{ mb: 2 }}
+              />
+
+              <TextField
+                fullWidth
+                label="ایمیل"
+                type="email"
+                value={registerForm.email}
+                onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                error={Boolean(registerErrors.email)}
+                helperText={registerErrors.email}
+                disabled={loading}
+                sx={{ mb: 2 }}
+              />
+
+              <TextField
+                fullWidth
+                label="رمز عبور"
+                type={showPassword ? 'text' : 'password'}
+                value={registerForm.password}
+                onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                error={Boolean(registerErrors.password)}
+                helperText={registerErrors.password}
+                disabled={loading}
+                sx={{ mb: 2 }}
+              />
+
+              <TextField
+                fullWidth
+                label="تکرار رمز عبور"
+                type={showPassword ? 'text' : 'password'}
+                value={registerForm.confirmPassword}
+                onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                error={Boolean(registerErrors.confirmPassword)}
+                helperText={registerErrors.confirmPassword}
+                disabled={loading}
+                sx={{ mb: 3 }}
+              />
+
+              <Button
+                fullWidth
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={loading}
+                sx={{
+                  py: 1.4,
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  borderRadius: 9999,
+                }}
+              >
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'ثبت‌نام و ورود'}
+              </Button>
+            </Box>
+          )}
+
+          <Divider sx={{ my: 3 }} />
+          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', textAlign: 'center' }}>
+            با ورود یا ثبت‌نام، شرایط خدمات و خط مشی رازداری سامانه را می‌پذیرید.
+          </Typography>
         </Paper>
       </Container>
     </Box>

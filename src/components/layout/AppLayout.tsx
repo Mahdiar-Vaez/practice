@@ -7,6 +7,7 @@ import RightWidgets from './RightWidgets';
 import MobileHeader from './MobileHeader';
 import MobileBottomNav from './MobileBottomNav';
 import MobilePostFab from './MobilePostFab';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -15,7 +16,9 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children, onFabClick }: AppLayoutProps) {
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', overflowX: 'hidden' }}>
+    <AuthGuard>
+      <Box sx={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', overflowX: 'hidden' }}>
+
       <Container
         maxWidth="lg"
         disableGutters
@@ -62,5 +65,7 @@ export default function AppLayout({ children, onFabClick }: AppLayoutProps) {
       {/* Mobile Fixed Bottom Navigation */}
       <MobileBottomNav />
     </Box>
+    </AuthGuard>
   );
 }
+

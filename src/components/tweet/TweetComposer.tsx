@@ -10,18 +10,20 @@ import {
   Stack,
   CircularProgress,
   Typography,
+  Chip,
+  Alert,
 } from '@mui/material';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
-import GifBoxOutlinedIcon from '@mui/icons-material/GifBoxOutlined';
-import BallotOutlinedIcon from '@mui/icons-material/BallotOutlined';
+import AttachFileOutlinedIcon from '@mui/icons-material/AttachFileOutlined';
 import SentimentSatisfiedAltOutlinedIcon from '@mui/icons-material/SentimentSatisfiedAltOutlined';
-import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
-import FmdGoodOutlinedIcon from '@mui/icons-material/FmdGoodOutlined';
+import CloseIcon from '@mui/icons-material/Close';
+import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import PublicIcon from '@mui/icons-material/Public';
 import { useAuth } from '@/hooks/useAuth';
+import { uploadService } from '@/services/upload.service';
 
 interface TweetComposerProps {
-  onPost?: (content: string) => Promise<void> | void;
+  onPost?: (content: string, mediaUrl?: string) => Promise<void> | void;
 }
 
 const MAX_CHARS = 280;
@@ -31,25 +33,81 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
   const [content, setContent] = React.useState('');
   const [isFocused, setIsFocused] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
+
+  // Attachments
+  const [mediaUrl, setMediaUrl] = React.useState<string | null>(null);
+  const [documentAttachment, setDocumentAttachment] = React.useState<{
+    name: string;
+    url: string;
+  } | null>(null);
+
+  const imageInputRef = React.useRef<HTMLInputElement | null>(null);
+  const docInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const charCount = content.length;
   const progress = Math.min((charCount / MAX_CHARS) * 100, 100);
   const isOverLimit = charCount > MAX_CHARS;
-  const canPost = content.trim().length > 0 && !isOverLimit && !isSubmitting;
+  const hasAttachment = Boolean(mediaUrl || documentAttachment);
+  const canPost =
+    (content.trim().length > 0 || hasAttachment) && !isOverLimit && !isSubmitting && !isUploading;
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+    try {
+      const res = await uploadService.uploadFile(file);
+      const fullUrl = `http://localhost:5000${res.url}`;
+      setMediaUrl(fullUrl);
+      setDocumentAttachment(null);
+    } catch (err: any) {
+      setUploadError(err?.message || 'خطا در بارگذاری تصویر');
+    } finally {
+      setIsUploading(false);
+      if (imageInputRef.current) imageInputRef.current.value = '';
+    }
+  };
+
+  const handleDocumentSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+    try {
+      const res = await uploadService.uploadFile(file);
+      const fullUrl = `http://localhost:5000${res.url || res.data?.url || ''}`;
+      setDocumentAttachment({ name: res.originalName || file.name, url: fullUrl });
+      setMediaUrl(null);
+    } catch (err: any) {
+
+      setUploadError(err?.message || 'خطا در بارگذاری سند');
+    } finally {
+      setIsUploading(false);
+      if (docInputRef.current) docInputRef.current.value = '';
+    }
+  };
 
   const handlePost = async () => {
     if (!canPost) return;
     const draftText = content;
+    const attached = mediaUrl || documentAttachment?.url;
     setIsSubmitting(true);
 
     try {
       if (onPost) {
-        await onPost(draftText);
+        await onPost(draftText, attached || undefined);
       }
       setContent('');
+      setMediaUrl(null);
+      setDocumentAttachment(null);
       setIsFocused(false);
     } catch {
-      // On failure, draft content is preserved so the user can re-try
+      // Retain draft on failure
     } finally {
       setIsSubmitting(false);
     }
@@ -66,12 +124,18 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
       }}
     >
       <Avatar
-        src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}
+        src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}
         alt={user?.name || 'تصویر کاربر'}
         sx={{ width: 40, height: 40 }}
       />
 
       <Box sx={{ flex: 1 }}>
+        {uploadError && (
+          <Alert severity="warning" onClose={() => setUploadError(null)} sx={{ mb: 1.5, borderRadius: 2 }}>
+            {uploadError}
+          </Alert>
+        )}
+
         {/* Text Input Area */}
         <InputBase
           placeholder="چه اتفاقی در حال رخ دادن است؟!"
@@ -95,8 +159,49 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
           }}
         />
 
+        {/* Image Preview */}
+        {mediaUrl && (
+          <Box sx={{ position: 'relative', my: 1.5, maxWidth: 360, borderRadius: 3, overflow: 'hidden' }}>
+            <Box
+              component="img"
+              src={mediaUrl}
+              alt="پیش‌نمایش تصویر"
+              sx={{ width: '100%', maxHeight: 240, objectFit: 'cover', display: 'block' }}
+            />
+            <IconButton
+              size="small"
+              onClick={() => setMediaUrl(null)}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                color: '#fff',
+                '&:hover': { backgroundColor: 'rgba(0,0,0,0.8)' },
+              }}
+              aria-label="حذف تصویر"
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        )}
+
+        {/* Document Preview */}
+        {documentAttachment && (
+          <Box sx={{ my: 1.5 }}>
+            <Chip
+              icon={<PictureAsPdfOutlinedIcon />}
+              label={`سند پیوست شده: ${documentAttachment.name}`}
+              onDelete={() => setDocumentAttachment(null)}
+              color="primary"
+              variant="outlined"
+              sx={{ py: 2, px: 1, borderRadius: 2, fontWeight: 700 }}
+            />
+          </Box>
+        )}
+
         {/* Audience Pill */}
-        {(isFocused || content.length > 0) && (
+        {(isFocused || content.length > 0 || hasAttachment) && (
           <Box
             sx={{
               display: 'inline-flex',
@@ -110,10 +215,6 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
               mb: 1.5,
               fontSize: '0.875rem',
               fontWeight: 700,
-              transition: 'background-color 0.2s',
-              '&:hover': {
-                backgroundColor: 'action.hover',
-              },
             }}
           >
             <PublicIcon sx={{ fontSize: 16 }} />
@@ -131,35 +232,63 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
             flexWrap: 'wrap',
             gap: 1,
             pt: 1,
-            borderTop: isFocused || content.length > 0 ? '1px solid' : 'none',
+            borderTop: isFocused || content.length > 0 || hasAttachment ? '1px solid' : 'none',
             borderColor: 'divider',
           }}
         >
           {/* Action Icons */}
           <Stack direction="row" spacing={0.25} sx={{ color: 'primary.main' }}>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن تصویر" disabled={isSubmitting}>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              hidden
+              onChange={handleImageSelect}
+            />
+            <IconButton
+              size="small"
+              sx={{ color: 'primary.main' }}
+              aria-label="افزودن تصویر"
+              disabled={isSubmitting || isUploading}
+              onClick={() => imageInputRef.current?.click()}
+            >
               <ImageOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن گیف" disabled={isSubmitting}>
-              <GifBoxOutlinedIcon sx={{ fontSize: 20 }} />
+
+            <input
+              ref={docInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword"
+              hidden
+              onChange={handleDocumentSelect}
+            />
+            <IconButton
+              size="small"
+              sx={{ color: 'primary.main' }}
+              aria-label="افزودن سند یا فایل"
+              disabled={isSubmitting || isUploading}
+              onClick={() => docInputRef.current?.click()}
+            >
+              <AttachFileOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="ایجاد نظرسنجی" disabled={isSubmitting}>
-              <BallotOutlinedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
+
             <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن ایموجی" disabled={isSubmitting}>
               <SentimentSatisfiedAltOutlinedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="زمان‌بندی ارسال" disabled={isSubmitting}>
-              <CalendarTodayOutlinedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-            <IconButton size="small" sx={{ color: 'primary.main' }} aria-label="افزودن موقعیت مکانی" disabled={isSubmitting}>
-              <FmdGoodOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
           </Stack>
 
           {/* Right Action: Character Count & Post Button */}
           <Stack direction="row" spacing={1.5} alignItems="center">
-            {charCount > 0 && (
+            {isUploading && (
+              <Stack direction="row" spacing={1} alignItems="center">
+                <CircularProgress size={18} />
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  در حال آپلود...
+                </Typography>
+              </Stack>
+            )}
+
+            {charCount > 0 && !isUploading && (
               <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
                 <CircularProgress
                   variant="determinate"

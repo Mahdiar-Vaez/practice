@@ -126,18 +126,19 @@ export default function HomePage() {
     setActiveTab(newValue);
   };
 
-  const handleNewTweet = async (content: string) => {
+  const handleNewTweet = async (content: string, mediaUrl?: string) => {
     const tempId = `temp_${Date.now()}`;
     const optimisticTweet: TweetData = {
       id: tempId,
       author: {
-        name: user?.name || 'کاربر دمو',
-        handle: user ? `@${user.username}` : '@demo',
-        avatar: user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+        name: user?.name || 'کاربر',
+        handle: user ? `@${user.username}` : '@user',
+        avatar: user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
         verified: true,
       },
       time: 'همین الان',
       content,
+      mediaUrl,
       likesCount: 0,
       commentsCount: 0,
       repostsCount: 0,
@@ -155,7 +156,7 @@ export default function HomePage() {
     setTweets((prev) => [optimisticTweet, ...prev]);
 
     try {
-      const createdTweet = await tweetService.createTweet(content);
+      const createdTweet = await tweetService.createTweet(content, mediaUrl);
       // Replace optimistic placeholder with real tweet
       setTweets((prev) =>
         prev.map((t) => (t.id === tempId ? createdTweet : t))
@@ -169,6 +170,7 @@ export default function HomePage() {
       throw err;
     }
   };
+
 
   const handleCommentCountChange = (tweetId: string, newCount: number) => {
     setTweets((prev) =>
