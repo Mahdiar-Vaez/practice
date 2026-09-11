@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "backend": "cd backend && npm run dev",
+    "backend:test": "cd backend && npm run test",
+    "backend:build": "cd backend && npm run build"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
