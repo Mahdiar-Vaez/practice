@@ -130,3 +130,144 @@ describe('E2E Backend API Authentication & Validation', () => {
     expect(meBody.data.user.email).toBe('demo@example.com');
   });
 });
+
+describe('E2E Backend Tweet, Comment & Like APIs', () => {
+  let token: string;
+
+  beforeAll(async () => {
+    const loginRes = await fetch(`${baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        identifier: 'demo@example.com',
+        password: 'password123',
+      }),
+    });
+    const body = await loginRes.json();
+    token = body.data.token;
+  });
+
+  it('GET /api/tweets returns 200 with list of seeded tweets', async () => {
+    const res = await fetch(`${baseUrl}/tweets`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(Array.isArray(body.data.tweets)).toBe(true);
+    expect(body.data.tweets.length).toBeGreaterThanOrEqual(3);
+    expect(body.data.tweets[0].author.name).toBeDefined();
+  });
+
+  it('POST /api/tweets without token returns 401', async () => {
+    const res = await fetch(`${baseUrl}/tweets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: 'تست بدون لاگین' }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('POST /api/tweets with empty content returns 400 with Persian validation error', async () => {
+    const res = await fetch(`${baseUrl}/tweets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ content: '' }),
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.errors?.content).toContain('متن پست نمی‌تواند خالی باشد');
+  });
+
+  it('POST /api/tweets with valid content returns 201 and created tweet', async () => {
+    const res = await fetch(`${baseUrl}/tweets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ content: 'توییت تست خودکار E2E' }),
+    });
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.data.tweet.content).toBe('توییت تست خودکار E2E');
+    expect(body.data.tweet.author.handle).toBe('@demo');
+  });
+
+  it('POST /api/tweets/:id/like toggles like on tweet', async () => {
+    // 1. Get first tweet
+    const feedRes = await fetch(`${baseUrl}/tweets`);
+    const feedBody = await feedRes.json();
+    const tweetId = feedBody.data.tweets[0].id;
+    const initialLikes = feedBody.data.tweets[0].likesCount;
+
+    // 2. Like it
+    const likeRes = await fetch(`${baseUrl}/tweets/${tweetId}/like`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(likeRes.status).toBe(200);
+    const likeBody = await likeRes.json();
+    expect(likeBody.success).toBe(true);
+    expect(likeBody.data.liked).toBe(true);
+    expect(likeBody.data.likesCount).toBe(initialLikes + 1);
+
+    // 3. Unlike it
+    const unlikeRes = await fetch(`${baseUrl}/tweets/${tweetId}/like`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(unlikeRes.status).toBe(200);
+    const unlikeBody = await unlikeRes.json();
+    expect(unlikeBody.data.liked).toBe(false);
+    expect(unlikeBody.data.likesCount).toBe(initialLikes);
+  });
+
+  it('POST /api/tweets/:id/like on invalid ID returns 404 via HandleError', async () => {
+    const res = await fetch(`${baseUrl}/tweets/invalid_id_999/like`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.message).toBe('پست مورد نظر یافت نشد');
+  });
+
+  it('GET /api/tweets/:id/comments returns comments list', async () => {
+    const feedRes = await fetch(`${baseUrl}/tweets`);
+    const feedBody = await feedRes.json();
+    const tweetId = feedBody.data.tweets[0].id;
+
+    const res = await fetch(`${baseUrl}/tweets/${tweetId}/comments`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(Array.isArray(body.data.comments)).toBe(true);
+  });
+
+  it('POST /api/tweets/:id/comments creates a new comment', async () => {
+    const feedRes = await fetch(`${baseUrl}/tweets`);
+    const feedBody = await feedRes.json();
+    const tweetId = feedBody.data.tweets[0].id;
+
+    const res = await fetch(`${baseUrl}/tweets/${tweetId}/comments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ content: 'نظر جدید برای تست E2E' }),
+    });
+
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.data.comment.content).toBe('نظر جدید برای تست E2E');
+    expect(body.data.comment.author.name).toBe('کاربر دمو');
+  });
+});
+
