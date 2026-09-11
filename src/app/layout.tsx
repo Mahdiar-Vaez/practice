@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Vazirmatn } from 'next/font/google';
 import ThemeRegistry from '@/theme/ThemeRegistry';
+import { AuthProvider } from '@/context/AuthContext';
 
 const vazir = Vazirmatn({
   subsets: ['arabic', 'latin'],
@@ -25,8 +26,11 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl" className={vazir.variable}>
       <body>
-        <ThemeRegistry>{children}</ThemeRegistry>
+        <ThemeRegistry>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeRegistry>
       </body>
     </html>
   );
 }
+
