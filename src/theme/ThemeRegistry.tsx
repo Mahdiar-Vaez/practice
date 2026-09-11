@@ -6,6 +6,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { getTwitterTheme } from './theme';
 
+
 type ColorMode = 'light' | 'dark';
 
 interface ColorModeContextType {
@@ -72,7 +73,11 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
   const theme = React.useMemo(() => getTwitterTheme(mode), [mode]);
 
   return (
-    <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+    <AppRouterCacheProvider
+      options={{
+        enableCssLayer: true,
+      }}
+    >
       <ColorModeContext.Provider value={colorMode}>
         <ThemeProvider theme={theme}>
           <CssBaseline />

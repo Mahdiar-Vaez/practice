@@ -8,6 +8,7 @@ export function getTwitterTheme(mode: 'light' | 'dark') {
   const colors = isDark ? paletteTokens.dark : paletteTokens.light;
 
   const themeOptions: ThemeOptions = {
+    direction: 'rtl',
     palette: {
       mode,
       background: {
@@ -43,6 +44,8 @@ export function getTwitterTheme(mode: 'light' | 'dark') {
     spacing: 8, // 8px base spacing unit: theme.spacing(1) = 8px, theme.spacing(0.5) = 4px
     typography: {
       fontFamily: [
+        'var(--font-vazir)',
+        'Vazirmatn',
         '-apple-system',
         'BlinkMacSystemFont',
         '"Segoe UI"',
