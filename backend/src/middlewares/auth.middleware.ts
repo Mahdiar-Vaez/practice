@@ -35,3 +35,24 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     });
   }
 };
+
+export const optionalAuthenticate = (req: AuthRequest, _res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, env.JWT_SECRET) as {
+      userId: string;
+      email: string;
+      username: string;
+    };
+    req.user = decoded;
+  } catch {
+    // Ignore invalid/expired token in optional authentication
+  }
+  next();
+};
+
