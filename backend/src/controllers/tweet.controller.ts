@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { TweetService } from '../services/tweet.service.js';
-import { tweetRepository } from '../repositories/mock-tweet.repository.js';
-import { userRepository } from '../repositories/mock-user.repository.js';
+import { tweetRepository, userRepository } from '../repositories/index.js';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
 
 const tweetService = new TweetService(tweetRepository, userRepository);

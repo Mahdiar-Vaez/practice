@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Twitter Clone DB",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "twitter_db",
+      "Username": "postgres",
+      "Password": "postgres",
+      "SSLMode": "prefer"
+    }
+  }
+}

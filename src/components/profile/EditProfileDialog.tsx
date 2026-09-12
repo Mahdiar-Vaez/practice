@@ -102,6 +102,7 @@ export default function EditProfileDialog({
       }}
     >
       <DialogTitle
+        component="div"
         sx={{
           display: 'flex',
           alignItems: 'center',

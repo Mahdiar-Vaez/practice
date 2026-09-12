@@ -31,7 +31,7 @@ export default function MobileHeader() {
           position: 'sticky',
           top: 0,
           zIndex: 1100,
-          backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+          backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.85)' : '#ffffff',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid',
           borderColor: 'divider',

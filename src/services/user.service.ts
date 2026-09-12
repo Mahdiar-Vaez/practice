@@ -2,6 +2,11 @@ import api from '@/lib/api';
 import { ApiResponse, User, TweetData, CommentData, UpdateProfileDTO } from '@/types/api';
 
 export const userService = {
+  async getAllUsers(): Promise<User[]> {
+    const res = await api.get<ApiResponse<{ users: User[] }>>('/users');
+    return res.data.data?.users || [];
+  },
+
   async getProfile(userId?: string): Promise<User> {
     const endpoint = userId ? `/users/${userId}/profile` : '/users/profile';
     const res = await api.get<ApiResponse<{ user: User }>>(endpoint);

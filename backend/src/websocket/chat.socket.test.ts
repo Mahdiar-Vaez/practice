@@ -129,4 +129,80 @@ describe('ChatWebSocket Engine', () => {
     senderWs.close();
     receiverWs.close();
   });
+
+  it('should forward chat:typing to target user', async () => {
+    const senderWs = new WebSocket(`ws://localhost:${port}/ws/chat?token=${demoToken}`);
+    const receiverWs = new WebSocket(`ws://localhost:${port}/ws/chat?token=${saraToken}`);
+
+    await Promise.all([
+      new Promise<void>((resolve, reject) => {
+        senderWs.on('open', () => resolve());
+        senderWs.on('error', reject);
+      }),
+      new Promise<void>((resolve, reject) => {
+        receiverWs.on('open', () => resolve());
+        receiverWs.on('error', reject);
+      }),
+    ]);
+
+    const typingPromise = new Promise<any>((resolve) => {
+      receiverWs.on('message', (raw) => {
+        const data = JSON.parse(raw.toString());
+        if (data.type === 'chat:typing') resolve(data);
+      });
+    });
+
+    senderWs.send(
+      JSON.stringify({
+        type: 'chat:typing',
+        toUserId: 'usr_sara_456',
+        isTyping: true,
+      })
+    );
+
+    const typingData = await typingPromise;
+    expect(typingData.type).toBe('chat:typing');
+    expect(typingData.fromUserId).toBe('usr_demo_123');
+    expect(typingData.isTyping).toBe(true);
+
+    senderWs.close();
+    receiverWs.close();
+  });
+
+  it('should forward chat:read to message author', async () => {
+    const senderWs = new WebSocket(`ws://localhost:${port}/ws/chat?token=${demoToken}`);
+    const receiverWs = new WebSocket(`ws://localhost:${port}/ws/chat?token=${saraToken}`);
+
+    await Promise.all([
+      new Promise<void>((resolve, reject) => {
+        senderWs.on('open', () => resolve());
+        senderWs.on('error', reject);
+      }),
+      new Promise<void>((resolve, reject) => {
+        receiverWs.on('open', () => resolve());
+        receiverWs.on('error', reject);
+      }),
+    ]);
+
+    const readPromise = new Promise<any>((resolve) => {
+      senderWs.on('message', (raw) => {
+        const data = JSON.parse(raw.toString());
+        if (data.type === 'chat:read') resolve(data);
+      });
+    });
+
+    receiverWs.send(
+      JSON.stringify({
+        type: 'chat:read',
+        toUserId: 'usr_demo_123',
+      })
+    );
+
+    const readData = await readPromise;
+    expect(readData.type).toBe('chat:read');
+    expect(readData.readerId).toBe('usr_sara_456');
+
+    senderWs.close();
+    receiverWs.close();
+  });
 });

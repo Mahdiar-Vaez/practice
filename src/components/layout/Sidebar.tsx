@@ -22,14 +22,8 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
 import MailIcon from '@mui/icons-material/Mail';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import PeopleIcon from '@mui/icons-material/People';
-import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
-import VerifiedIcon from '@mui/icons-material/Verified';
-import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
 import PersonIcon from '@mui/icons-material/Person';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
@@ -62,29 +56,31 @@ export default function Sidebar() {
     <Box
       component="header"
       sx={{
-        width: isLarge ? 240 : 80,
+        width: isLarge ? 200 : 64,
         height: '100vh',
         position: 'sticky',
         top: 0,
-        display: { xs: 'none', sm: 'flex' }, // Hidden on mobile xs, mobile uses bottom nav + top bar
+        display: { xs: 'none', sm: 'flex' },
         flexDirection: 'column',
         justifyContent: 'space-between',
-        padding: isLarge ? '12px 12px' : '12px 8px',
+        padding: isLarge ? '10px 10px' : '10px 4px',
         borderInlineEnd: '1px solid',
         borderColor: 'divider',
+        backgroundColor: 'background.paper',
         userSelect: 'none',
         flexShrink: 0,
+        zIndex: 100,
       }}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         {/* Twitter / X Logo */}
-        <Box sx={{ px: 1, py: 0.5, mb: 0.5 }}>
+        <Box sx={{ px: 0.5, py: 0.5, mb: 0.5 }}>
           <IconButton
             component={Link}
             href="/"
             sx={{
-              width: 50,
-              height: 50,
+              width: 40,
+              height: 40,
               color: 'text.primary',
               '&:hover': {
                 backgroundColor: 'action.hover',
@@ -92,19 +88,14 @@ export default function Sidebar() {
             }}
             aria-label="X Logo"
           >
-            <svg
-              viewBox="0 0 24 24"
-              width="28"
-              height="28"
-              fill="currentColor"
-            >
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
             </svg>
           </IconButton>
         </Box>
 
         {/* Navigation Items */}
-        <Stack spacing={0.5} component="nav">
+        <Stack spacing={0.25} component="nav">
           {NAV_ITEMS.map((item) => {
             if (item.authOnly === 'guest' && isAuthenticated) return null;
             const isActive = pathname === item.href;
@@ -121,9 +112,9 @@ export default function Sidebar() {
                   textDecoration: 'none',
                   color: 'text.primary',
                   borderRadius: 9999,
-                  p: isLarge ? '10px 16px' : '10px',
-                  width: isLarge ? 'fit-content' : 50,
-                  height: 50,
+                  p: isLarge ? '8px 12px' : '8px',
+                  width: isLarge ? 'fit-content' : 40,
+                  height: 40,
                   mx: isLarge ? 0 : 'auto',
                   transition: 'background-color 0.2s ease',
                   '&:hover': {
@@ -133,7 +124,7 @@ export default function Sidebar() {
               >
                 <IconComponent
                   sx={{
-                    fontSize: 26,
+                    fontSize: 20,
                     color: 'text.primary',
                     ...(item.isSearch && isActive && {
                       stroke: 'currentColor',
@@ -143,11 +134,11 @@ export default function Sidebar() {
                 />
                 {isLarge && (
                   <Typography
-                    variant="body1"
+                    variant="body2"
                     sx={{
-                      ml: 2,
-                      fontWeight: isActive ? 800 : 400,
-                      fontSize: '1.1rem',
+                      ml: 1.5,
+                      fontWeight: isActive ? 700 : 500,
+                      fontSize: '0.92rem',
                       lineHeight: 1,
                       color: 'text.primary',
                     }}
@@ -168,50 +159,51 @@ export default function Sidebar() {
               cursor: 'pointer',
               color: 'text.primary',
               borderRadius: 9999,
-              p: isLarge ? '10px 16px' : '10px',
-              width: isLarge ? 'fit-content' : 50,
-              height: 50,
+              p: isLarge ? '8px 12px' : '8px',
+              width: isLarge ? 'fit-content' : 40,
+              height: 40,
               mx: isLarge ? 0 : 'auto',
               transition: 'background-color 0.2s ease',
               '&:hover': {
                 backgroundColor: 'action.hover',
               },
             }}
-            aria-label={`Switch to ${mode === 'dark' ? 'Light' : 'Dark'} mode`}
+            aria-label={`تغییر حالت به ${mode === 'dark' ? 'روشن' : 'تاریک'}`}
           >
             {mode === 'dark' ? (
-              <LightModeOutlinedIcon sx={{ fontSize: 26, color: 'text.primary' }} />
+              <LightModeOutlinedIcon sx={{ fontSize: 20, color: 'text.primary' }} />
             ) : (
-              <DarkModeOutlinedIcon sx={{ fontSize: 26, color: 'text.primary' }} />
+              <DarkModeOutlinedIcon sx={{ fontSize: 20, color: 'text.primary' }} />
             )}
             {isLarge && (
               <Typography
-                variant="body1"
+                variant="body2"
                 sx={{
-                  ml: 2,
+                  ml: 1.5,
                   fontWeight: 500,
-                  fontSize: '1.1rem',
+                  fontSize: '0.92rem',
                   lineHeight: 1,
                   color: 'text.primary',
                 }}
               >
-                {mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                {mode === 'dark' ? 'حالت روشن' : 'حالت تاریک'}
               </Typography>
             )}
           </Box>
         </Stack>
 
         {/* Primary Action Button ("Post") */}
-        <Box sx={{ mt: 2, width: '100%' }}>
+        <Box sx={{ mt: 1.5, width: '100%' }}>
           {isLarge ? (
             <Button
               variant="contained"
               color="primary"
               fullWidth
               sx={{
-                py: 1.25,
-                fontSize: '1rem',
-                fontWeight: 800,
+                py: 0.8,
+                fontSize: '0.88rem',
+                fontWeight: 700,
+                borderRadius: 9999,
               }}
             >
               ارسال پست
@@ -220,8 +212,8 @@ export default function Sidebar() {
             <Tooltip title="ارسال پست">
               <IconButton
                 sx={{
-                  width: 50,
-                  height: 50,
+                  width: 40,
+                  height: 40,
                   mx: 'auto',
                   display: 'flex',
                   backgroundColor: 'primary.main',
@@ -232,7 +224,7 @@ export default function Sidebar() {
                 }}
                 aria-label="New Post"
               >
-                <CreateIcon />
+                <CreateIcon sx={{ fontSize: 18 }} />
               </IconButton>
             </Tooltip>
           )}
@@ -248,7 +240,7 @@ export default function Sidebar() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: isLarge ? 'space-between' : 'center',
-              p: isLarge ? '10px 12px' : '6px',
+              p: isLarge ? '6px 8px' : '4px',
               borderRadius: 9999,
               cursor: 'pointer',
               transition: 'background-color 0.2s ease',
@@ -257,25 +249,25 @@ export default function Sidebar() {
               },
             }}
           >
-            <Stack direction="row" spacing={1.5} alignItems="center">
+            <Stack direction="row" spacing={1} alignItems="center">
               <Avatar
                 alt={user.name}
                 src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}
-                sx={{ width: 40, height: 40 }}
+                sx={{ width: 32, height: 32 }}
               />
               {isLarge && (
                 <Box sx={{ minWidth: 0, textAlign: 'right' }}>
                   <Typography
-                    variant="body1"
+                    variant="body2"
                     noWrap
-                    sx={{ fontWeight: 700, lineHeight: 1.2 }}
+                    sx={{ fontWeight: 700, fontSize: '0.84rem', lineHeight: 1.2 }}
                   >
                     {user.name}
                   </Typography>
                   <Typography
-                    variant="body2"
+                    variant="caption"
                     noWrap
-                    sx={{ color: 'text.secondary', lineHeight: 1.2 }}
+                    sx={{ color: 'text.secondary', fontSize: '0.74rem', lineHeight: 1.2, display: 'block' }}
                   >
                     @{user.username}
                   </Typography>
@@ -283,7 +275,7 @@ export default function Sidebar() {
               )}
             </Stack>
             {isLarge && (
-              <MoreHorizIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+              <MoreHorizIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
             )}
           </Box>
 
@@ -296,8 +288,8 @@ export default function Sidebar() {
             sx={{
               '& .MuiPaper-root': {
                 borderRadius: 3,
-                minWidth: 200,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                minWidth: 190,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
               },
             }}
           >
@@ -306,7 +298,7 @@ export default function Sidebar() {
                 setAnchorEl(null);
                 logout();
               }}
-              sx={{ color: 'error.main', fontWeight: 600, gap: 1 }}
+              sx={{ color: 'error.main', fontWeight: 600, gap: 1, fontSize: '0.85rem' }}
             >
               <LogoutIcon fontSize="small" />
               خروج از حساب (@{user.username})
@@ -314,18 +306,19 @@ export default function Sidebar() {
           </Menu>
         </>
       ) : (
-        <Box sx={{ p: isLarge ? 1 : 0 }}>
+        <Box sx={{ p: isLarge ? 0.5 : 0 }}>
           {isLarge ? (
             <Button
               component={Link}
               href="/login"
               variant="outlined"
               fullWidth
-              startIcon={<LoginIcon />}
+              startIcon={<LoginIcon sx={{ fontSize: 18 }} />}
               sx={{
                 borderRadius: 9999,
                 fontWeight: 700,
-                py: 1,
+                py: 0.7,
+                fontSize: '0.84rem',
               }}
             >
               ورود به حساب
@@ -336,14 +329,14 @@ export default function Sidebar() {
                 component={Link}
                 href="/login"
                 sx={{
-                  width: 48,
-                  height: 48,
+                  width: 40,
+                  height: 40,
                   mx: 'auto',
                   border: '1px solid',
                   borderColor: 'divider',
                 }}
               >
-                <LoginIcon fontSize="small" />
+                <LoginIcon sx={{ fontSize: 18 }} />
               </IconButton>
             </Tooltip>
           )}

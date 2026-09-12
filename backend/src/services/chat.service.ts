@@ -1,7 +1,6 @@
 import { IChatRepository } from '../repositories/chat.repository.interface.js';
 import { IUserRepository } from '../repositories/user.repository.interface.js';
-import { chatRepository } from '../repositories/mock-chat.repository.js';
-import { userRepository } from '../repositories/mock-user.repository.js';
+import { chatRepository, userRepository } from '../repositories/index.js';
 import { DirectMessage, SendMessageDTO, ConversationSummary } from '../types/chat.types.js';
 import { HandleError } from '../errors/handle-error.js';
 

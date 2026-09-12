@@ -15,6 +15,21 @@ export function getActiveConnections(): Map<string, Set<WebSocket>> {
   return activeConnections;
 }
 
+export function notifyMessagesRead(readerId: string, authorId: string): void {
+  const sockets = activeConnections.get(authorId);
+  if (sockets) {
+    const payload = JSON.stringify({
+      type: 'chat:read',
+      readerId,
+    });
+    for (const ws of sockets) {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(payload);
+      }
+    }
+  }
+}
+
 export function setupChatWebSocket(server: http.Server): WebSocketServer {
   const wss = new WebSocketServer({ server, path: '/ws/chat' });
 
@@ -114,6 +129,37 @@ export function setupChatWebSocket(server: http.Server): WebSocketServer {
 
         if (data.type === 'pong') {
           socket.isAlive = true;
+          return;
+        }
+
+        // Mark read event
+        if (data.type === 'chat:read') {
+          const targetId = data.toUserId || data.targetUserId || data.targetId;
+          if (targetId) {
+            await chatService.markRead(userId, targetId);
+            notifyMessagesRead(userId, targetId);
+          }
+          return;
+        }
+
+        // Typing indicator event
+        if (data.type === 'chat:typing') {
+          const toUserId = data.toUserId || data.targetUserId || data.receiverId;
+          if (toUserId) {
+            const receiverSockets = activeConnections.get(toUserId);
+            if (receiverSockets) {
+              const payload = JSON.stringify({
+                type: 'chat:typing',
+                fromUserId: userId,
+                isTyping: !!data.isTyping,
+              });
+              for (const ws of receiverSockets) {
+                if (ws.readyState === WebSocket.OPEN) {
+                  ws.send(payload);
+                }
+              }
+            }
+          }
           return;
         }
 

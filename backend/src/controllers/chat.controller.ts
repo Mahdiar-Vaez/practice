@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
 import { chatService } from '../services/chat.service.js';
+import { notifyMessagesRead } from '../websocket/chat.socket.js';
 
 export class ChatController {
   async getConversations(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
@@ -21,6 +22,7 @@ export class ChatController {
       const userId = req.user!.userId;
       const targetId = req.params.targetId;
       const messages = await chatService.getMessages(userId, targetId);
+      notifyMessagesRead(userId, targetId);
       res.status(200).json({
         success: true,
         data: { messages },
@@ -59,6 +61,7 @@ export class ChatController {
       const userId = req.user!.userId;
       const targetId = req.params.targetId;
       await chatService.markRead(userId, targetId);
+      notifyMessagesRead(userId, targetId);
       res.status(200).json({
         success: true,
         message: 'پیام‌ها خوانده شدند',

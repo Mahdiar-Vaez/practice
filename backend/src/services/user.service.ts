@@ -32,6 +32,13 @@ export class UserService {
     return safeUser;
   }
 
+  async getAllUsers(excludeUserId?: string): Promise<SafeUser[]> {
+    const users = await this.userRepo.getAll();
+    return users
+      .filter((u) => !excludeUserId || u.id !== excludeUserId)
+      .map(({ password: _, ...safeUser }) => safeUser);
+  }
+
   async updateProfile(userId: string, data: UpdateProfileDTO): Promise<SafeUser> {
     const user = await this.userRepo.findById(userId);
     if (!user) {

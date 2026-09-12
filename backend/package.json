@@ -7,7 +7,11 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:up": "docker compose -f ../docker-compose.yml up -d",
+    "db:down": "docker compose -f ../docker-compose.yml down",
+    "db:logs": "docker compose -f ../docker-compose.yml logs -f",
+    "db:status": "docker compose -f ../docker-compose.yml ps"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -16,6 +20,7 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.3.0",
+    "pg": "^8.13.3",
     "ws": "^8.21.3",
     "zod": "^3.24.2"
   },
@@ -26,6 +31,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/multer": "^2.2.0",
     "@types/node": "^22.13.4",
+    "@types/pg": "^8.11.11",
     "@types/ws": "^8.18.1",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",

@@ -1,12 +1,21 @@
 import { Response, NextFunction } from 'express';
 import { UserService } from '../services/user.service.js';
-import { userRepository } from '../repositories/mock-user.repository.js';
-import { tweetRepository } from '../repositories/mock-tweet.repository.js';
+import { userRepository, tweetRepository } from '../repositories/index.js';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
 
 const userService = new UserService(userRepository, tweetRepository);
 
 export class UserController {
+  async getUsers(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const currentUserId = req.user?.userId;
+      const users = await userService.getAllUsers(currentUserId);
+      res.status(200).json({ success: true, data: { users } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getProfile(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const targetId = req.params.id || req.user?.userId;

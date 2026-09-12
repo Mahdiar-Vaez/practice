@@ -4,6 +4,7 @@ import { authenticate, optionalAuthenticate } from '../middlewares/auth.middlewa
 
 const router = Router();
 
+router.get('/', optionalAuthenticate, (req, res, next) => userController.getUsers(req, res, next));
 router.get('/profile', authenticate, (req, res, next) => userController.getProfile(req, res, next));
 router.get('/:id/profile', optionalAuthenticate, (req, res, next) => userController.getProfile(req, res, next));
 router.put('/profile', authenticate, (req, res, next) => userController.updateProfile(req, res, next));

@@ -40,7 +40,7 @@ export default function MobileBottomNav() {
         pb: 'env(safe-area-inset-bottom, 0px)',
         alignItems: 'center',
         justifyContent: 'space-around',
-        backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+        backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.85)' : '#ffffff',
         backdropFilter: 'blur(12px)',
         borderTop: '1px solid',
         borderColor: 'divider',

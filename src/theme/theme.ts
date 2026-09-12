@@ -85,10 +85,15 @@ export function getTwitterTheme(mode: 'light' | 'dark') {
             '--sab': 'env(safe-area-inset-bottom, 0px)',
             '--sat': 'env(safe-area-inset-top, 0px)',
           },
+          html: {
+            height: '100%',
+            overflow: 'hidden',
+          },
           body: {
+            height: '100%',
+            overflow: 'hidden',
             backgroundColor: colors.background,
             color: colors.textPrimary,
-            overflowX: 'hidden',
             scrollbarWidth: 'thin',
             scrollbarColor: `${colors.border} ${colors.background}`,
             WebkitTapHighlightColor: 'transparent',

@@ -1,9 +1,9 @@
-import { tweetRepository, MockTweetRepository } from '../repositories/mock-tweet.repository.js';
-import { userRepository, MockUserRepository } from '../repositories/mock-user.repository.js';
+import { tweetRepository } from '../repositories/index.js';
+import { userRepository } from '../repositories/index.js';
 import { ITweetRepository } from '../repositories/tweet.repository.interface.js';
 import { IUserRepository } from '../repositories/user.repository.interface.js';
 import { PopulatedTweet, Tweet } from '../types/tweet.types.js';
-import { User } from '../types/user.types.js';
+import { User, SafeUser } from '../types/user.types.js';
 
 export interface TrendingHashtag {
   tag: string;
@@ -12,7 +12,7 @@ export interface TrendingHashtag {
 
 export interface SearchResult {
   tweets: PopulatedTweet[];
-  users: User[];
+  users: SafeUser[];
 }
 
 export class SearchService {
@@ -91,11 +91,13 @@ export class SearchService {
     const populatedTweets = await this.populateTweets(matchingTweets, currentUserId);
 
     const allUsers = await this.userRepo.getAll();
-    const matchingUsers = allUsers.filter(
-      (u) =>
-        u.name.toLowerCase().includes(q) ||
-        u.username.toLowerCase().includes(cleanUserQ)
-    );
+    const matchingUsers = allUsers
+      .filter(
+        (u) =>
+          u.name.toLowerCase().includes(q) ||
+          u.username.toLowerCase().includes(cleanUserQ)
+      )
+      .map(({ password: _, ...u }) => u);
 
     return {
       tweets: populatedTweets,

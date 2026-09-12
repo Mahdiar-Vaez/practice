@@ -9,7 +9,11 @@
     "lint": "next lint",
     "backend": "cd backend && npm run dev",
     "backend:test": "cd backend && npm run test",
-    "backend:build": "cd backend && npm run build"
+    "backend:build": "cd backend && npm run build",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f",
+    "db:status": "docker compose ps"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

@@ -12,8 +12,9 @@ export default function NotificationsPage() {
       <Box
         sx={{
           position: 'sticky',
-          top: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.65)',
+          top: { xs: 53, sm: 0 },
+          backgroundColor: (theme) =>
+            theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(12px)',
           zIndex: 20,
           borderBottom: '1px solid',

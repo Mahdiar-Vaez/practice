@@ -62,6 +62,7 @@ export default function RightWidgets() {
         display: { xs: 'none', lg: 'block' },
         scrollbarWidth: 'none',
         '&::-webkit-scrollbar': { display: 'none' },
+        flexShrink: 0,
       }}
     >
       {/* Sticky Search Header */}
@@ -74,7 +75,7 @@ export default function RightWidgets() {
           px: 3,
           display: 'flex',
           alignItems: 'center',
-          backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+          backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.85)' : '#ffffff',
           backdropFilter: 'blur(12px)',
           zIndex: 20,
         }}

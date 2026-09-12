@@ -50,14 +50,41 @@ npm run backend:test
 
 ---
 
-## 👤 حساب کاربری آزمایشی (Pre-seeded Mock Account)
+## 🐘 پایگاه‌داده PostgreSQL و پنل مدیریت pgAdmin (Docker)
 
-داده‌های اولیه در مخزن آزمایشی با مشخصات زیر بارگذاری شده‌اند:
-* **ایمیل یا نام کاربری:** `demo@example.com` یا `demo`
-* **رمز عبور:** `password123`
-* **نام نمایشی:** `کاربر دمو`
+پروژه به همراه تنظیمات Docker Compose برای پایگاه داده PostgreSQL 16 و پنل مدیریت وب pgAdmin 4 ارائه شده است.
 
----
+### راه‌اندازی سریع با داکر:
+```bash
+# از ریشه پروژه یا پوشه backend:
+npm run db:up
+
+# یا مستقیماً با داکر:
+docker compose up -d
+```
+
+### مشخصات سرویس‌ها:
+* **PostgreSQL:**
+  - پورت: `5432`
+  - نام کاربری: `postgres`
+  - رمز عبور: `postgres`
+  - نام پایگاه‌داده: `twitter_db`
+  - متغیر اتصال: `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/twitter_db`
+
+* **pgAdmin 4 (رابط تحت وب مدیریت دیتابیس):**
+  - آدرس: [http://localhost:5050](http://localhost:5050)
+  - ایمیل ورود: `admin@admin.com`
+  - رمز عبور: `admin`
+  - سرور پایگاه داده توییتر به صورت خودکار از طریق فایل `pgadmin/servers.json` در پنل اضافه شده است.
+
+### اسکریپت‌های مدیریت کانتینر:
+```bash
+npm run db:up      # شروع سرویس‌های دیتابیس و pgAdmin
+npm run db:down    # خاموش کردن کانتینرها
+npm run db:logs    # مشاهده لاگ‌ها به صورت زنده
+npm run db:status  # مشاهده وضعیت کانتینرها
+```
+
 
 ## 📡 مسیرهای API (Endpoints)
 

@@ -144,6 +144,7 @@ export default function CommentsDialog({
     >
       {/* Dialog Header */}
       <DialogTitle
+        component="div"
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -152,7 +153,7 @@ export default function CommentsDialog({
           px: 2,
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+        <Typography component="div" variant="h6" sx={{ fontWeight: 700 }}>
           پاسخ‌ها و نظرات
         </Typography>
         <IconButton onClick={onClose} size="small" aria-label="بستن">

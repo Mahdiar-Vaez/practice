@@ -57,13 +57,13 @@ export const paletteTokens = {
   },
   light: {
     background: '#ffffff',
-    surface: '#f7f9f9',
-    surfaceHover: '#eff3f4',
+    surface: '#ffffff',
+    surfaceHover: '#f7f9f9',
     border: '#eff3f4',
     borderSubtle: '#e1e8ed',
     textPrimary: '#0f1419',
     textSecondary: '#536471',
-    actionHover: 'rgba(15, 20, 25, 0.1)',
-    inputBackground: '#eff3f4',
+    actionHover: 'rgba(15, 20, 25, 0.05)',
+    inputBackground: '#f7f9f9',
   },
 } as const;

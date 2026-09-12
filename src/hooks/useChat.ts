@@ -23,17 +23,25 @@ export function useChat(initialTargetUserId: string | null = null) {
   const [connectionStatus, setConnectionStatus] = useState<ChatConnectionStatus>('disconnected');
   const [isLoadingMessages, setIsLoadingMessages] = useState<boolean>(false);
   const [isLoadingConversations, setIsLoadingConversations] = useState<boolean>(false);
+  const [isPartnerTyping, setIsPartnerTyping] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const activeUserIdRef = useRef<string | null>(activeUserId);
+  const userRef = useRef(user);
 
-  // Keep activeUserIdRef up-to-date for WebSocket event callbacks
+  // Keep refs up-to-date for WebSocket event callbacks
   useEffect(() => {
     activeUserIdRef.current = activeUserId;
+    setIsPartnerTyping(false);
   }, [activeUserId]);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   // 1. Fetch conversations
   const loadConversations = useCallback(async () => {
@@ -61,6 +69,16 @@ export function useChat(initialTargetUserId: string | null = null) {
       setConversations((prev) =>
         prev.map((c) => (c.userId === targetId ? { ...c, unreadCount: 0 } : c))
       );
+
+      // Notify socket that messages were read
+      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+        socketRef.current.send(
+          JSON.stringify({
+            type: 'chat:read',
+            toUserId: targetId,
+          })
+        );
+      }
     } catch (err: any) {
       console.error('Error fetching messages:', err);
       setError(err.message || 'خطا در بارگذاری پیام‌ها');
@@ -141,9 +159,11 @@ export function useChat(initialTargetUserId: string | null = null) {
               return;
             }
 
+            // Real-time message received
             if (data.type === 'chat:message' && data.message) {
               const incomingMsg: DirectMessage = data.message;
               const currentTarget = activeUserIdRef.current;
+              const currentUserId = userRef.current?.id;
 
               // If message belongs to current active thread
               if (
@@ -157,27 +177,38 @@ export function useChat(initialTargetUserId: string | null = null) {
                   return [...prev, incomingMsg];
                 });
 
-                // If we are currently active in this chat, mark as read
+                // If we are currently active in this chat and it came from the partner, mark as read
                 if (incomingMsg.senderId === currentTarget) {
                   chatService.markRead(currentTarget).catch(() => {});
+                  if (socket.readyState === WebSocket.OPEN) {
+                    socket.send(
+                      JSON.stringify({
+                        type: 'chat:read',
+                        toUserId: currentTarget,
+                      })
+                    );
+                  }
                 }
               }
 
               // Update conversation summaries
-              setConversations((prev) => {
-                const partnerId =
-                  incomingMsg.senderId === user?.id
-                    ? incomingMsg.receiverId
-                    : incomingMsg.senderId;
+              const partnerId =
+                incomingMsg.senderId === currentUserId
+                  ? incomingMsg.receiverId
+                  : incomingMsg.senderId;
 
+              let partnerFound = false;
+
+              setConversations((prev) => {
                 const existingIndex = prev.findIndex((c) => c.userId === partnerId);
                 const isCurrentActive = partnerId === activeUserIdRef.current;
 
                 if (existingIndex >= 0) {
+                  partnerFound = true;
                   const updated = [...prev];
                   const existing = updated[existingIndex];
                   const newUnread =
-                    incomingMsg.senderId !== user?.id && !isCurrentActive
+                    incomingMsg.senderId !== currentUserId && !isCurrentActive
                       ? existing.unreadCount + 1
                       : existing.unreadCount;
 
@@ -190,12 +221,41 @@ export function useChat(initialTargetUserId: string | null = null) {
                   // Move to top
                   const [item] = updated.splice(existingIndex, 1);
                   return [item, ...updated];
-                } else {
-                  // Reload conversations to populate complete user profile
-                  loadConversations();
-                  return prev;
                 }
+                return prev;
               });
+
+              // If this was a new conversation partner not yet in list, refresh conversations
+              if (!partnerFound) {
+                loadConversations();
+              }
+            }
+
+            // Read receipts event
+            if (data.type === 'chat:read' && data.readerId) {
+              const readerId = data.readerId;
+              if (activeUserIdRef.current === readerId) {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.receiverId === readerId ? { ...m, read: true } : m
+                  )
+                );
+              }
+            }
+
+            // Typing indicator event
+            if (data.type === 'chat:typing' && data.fromUserId) {
+              if (data.fromUserId === activeUserIdRef.current) {
+                setIsPartnerTyping(!!data.isTyping);
+                if (typingTimeoutRef.current) {
+                  clearTimeout(typingTimeoutRef.current);
+                }
+                if (data.isTyping) {
+                  typingTimeoutRef.current = setTimeout(() => {
+                    setIsPartnerTyping(false);
+                  }, 3000);
+                }
+              }
             }
 
             if (data.type === 'chat:error') {
@@ -206,9 +266,10 @@ export function useChat(initialTargetUserId: string | null = null) {
           }
         };
 
-        socket.onerror = (event) => {
-          console.error('WebSocket encountered an error:', event);
-          setConnectionStatus('error');
+        socket.onerror = () => {
+          // WebSocket connection dropped or backend starting up:
+          // Fall back gracefully to HTTP REST without red Next.js console overlay
+          setConnectionStatus('disconnected');
         };
 
         socket.onclose = (event) => {
@@ -218,6 +279,12 @@ export function useChat(initialTargetUserId: string | null = null) {
           if (pingTimerRef.current) {
             clearInterval(pingTimerRef.current);
             pingTimerRef.current = null;
+          }
+
+          // Code 1008 is auth failure - do not reconnect automatically
+          if (event.code === 1008) {
+            setError('احراز هویت وب‌سوکت چت با خطا مواجه شد');
+            return;
           }
 
           if (event.code !== 1000 && isSubscribed) {
@@ -244,12 +311,31 @@ export function useChat(initialTargetUserId: string | null = null) {
         clearInterval(pingTimerRef.current);
         pingTimerRef.current = null;
       }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
       if (socketRef.current) {
         socketRef.current.close(1000, 'Component unmounted');
         socketRef.current = null;
       }
     };
-  }, [token, user?.id, loadConversations]);
+  }, [token, loadConversations]);
+
+  // Send typing notification to active partner
+  const sendTyping = useCallback((isTyping: boolean) => {
+    const targetId = activeUserIdRef.current;
+    if (!targetId) return;
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(
+        JSON.stringify({
+          type: 'chat:typing',
+          toUserId: targetId,
+          isTyping,
+        })
+      );
+    }
+  }, []);
 
   const sendMessage = useCallback(
     async (
@@ -284,6 +370,9 @@ export function useChat(initialTargetUserId: string | null = null) {
         throw new Error('متن پیام نمی‌تواند خالی باشد');
       }
 
+      // Stop typing indicator on send
+      sendTyping(false);
+
       // Try via WebSocket first if connected
       if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
         socketRef.current.send(
@@ -316,7 +405,7 @@ export function useChat(initialTargetUserId: string | null = null) {
       loadConversations();
       return saved;
     },
-    [activeUserId, loadConversations]
+    [activeUserId, loadConversations, sendTyping]
   );
 
   return {
@@ -328,11 +417,13 @@ export function useChat(initialTargetUserId: string | null = null) {
     isConnected: connectionStatus === 'connected',
     isLoadingMessages,
     isLoadingConversations,
+    isPartnerTyping,
     error,
 
     // Actions
     setActiveUserId,
     sendMessage,
+    sendTyping,
     loadConversations,
     loadMessages,
   };

@@ -193,7 +193,7 @@ export default function HomePage() {
         sx={{
           position: 'sticky',
           top: { xs: 53, sm: 0 },
-          backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+          backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.85)' : '#ffffff',
           backdropFilter: 'blur(12px)',
           zIndex: 20,
           borderBottom: '1px solid',

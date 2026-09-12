@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service.js';
-import { userRepository } from '../repositories/mock-user.repository.js';
+import { userRepository } from '../repositories/index.js';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
 
 const authService = new AuthService(userRepository);
